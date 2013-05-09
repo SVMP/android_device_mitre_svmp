@@ -1,5 +1,13 @@
 Device specific files for the SVMP project.
 
+Kernel
+======
+
+The included kernel is built from the 3.4.25 linux-stable source branch
+with no modifications using the included 3_4_25_svmp.config build configuration.
+
+https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/tag/?id=v3.4.25
+
 License
 =======
 Copyright (c) 2012-2013, The MITRE Corporation, All Rights Reserved.
