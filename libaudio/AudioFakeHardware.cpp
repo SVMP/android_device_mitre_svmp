@@ -1,0 +1,283 @@
+/*
+Copyright 2013 The MITRE Corporation, All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this work except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/* //device/servers/AudioFlinger/AudioFakeHardware.cpp
+**
+** Copyright 2007, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+/* //device/servers/AudioFlinger/AudioFakeHardware.cpp
+**
+** Copyright 2007, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+
+
+// MOCSI - MITRE 2012
+// Dylan Ladwig <dladwig@mitre.org>, <dylan.ladwig@gmail.com>
+
+#define LOG_TAG "LibMOCSIAudio"
+
+#include <stdint.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <utils/String8.h>
+#include <cutils/log.h>
+
+#include "AudioFakeHardware.h"
+#include <media/AudioRecord.h>
+
+namespace android_audio_legacy {
+
+// ----------------------------------------------------------------------------
+
+#define BUFFER_SIZE 65536
+
+extern "C" {
+	int fd=-1;
+	unsigned short *position;
+	unsigned short *data;
+
+	void setupBuffer() {
+		if(fd>0) {
+			LOGW("Tried to open buffer twice!");
+			return; // already made
+		}
+
+		fd = open("/system/audio_loop", O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+		if(fd<0) {
+			LOGE("Could not open audio loop buffer!");
+			return;
+		}
+			
+		LOGE("successfully opened audio loop buffer in /system/audio_loop");
+	
+
+		// expand file to correct size
+		lseek(fd, sizeof(unsigned short)*(BUFFER_SIZE+1)-1, SEEK_SET);
+		write(fd, " ", 1);
+
+		// mmap
+		position = (unsigned short*) mmap(NULL, sizeof(unsigned short)*(BUFFER_SIZE+1), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+		if(!position)
+			LOGE("Could not MMAP audio loop buffer!");
+
+		LOGI("Opened audio loop successfully.");
+
+		data = position+sizeof(unsigned short);
+	}
+
+	void writeToBuffer(int length, unsigned short *in) {
+		if(fd<0||!position)
+			return;
+
+		int pos = *position, i;
+
+		for(i=0;i<length;i++,pos=(pos+1)%BUFFER_SIZE) {
+			data[pos]=in[i];
+		}
+		*position=pos;
+	}
+}
+
+AudioFakeHardware::AudioFakeHardware() : mMicMute(false)
+{
+}
+
+AudioFakeHardware::~AudioFakeHardware()
+{
+}
+
+status_t AudioFakeHardware::initCheck()
+{
+    return NO_ERROR;
+}
+
+AudioStreamOut* AudioFakeHardware::openOutputStream(
+        uint32_t devices, int *format, uint32_t *channels, uint32_t *sampleRate, status_t *status)
+{
+    AudioAACStreamOut* out = new AudioAACStreamOut();
+    status_t lStatus = out->set(format, channels, sampleRate);
+    if (status) {
+        *status = lStatus;
+    }
+    if (lStatus == NO_ERROR) {
+		LOGI("Makin' an output...");
+        return out;
+	}
+    delete out;
+    return 0;
+}
+
+void AudioFakeHardware::closeOutputStream(AudioStreamOut* out)
+{
+	LOGI("Gettin' rid of an output...");
+    delete out;
+}
+
+AudioStreamIn* AudioFakeHardware::openInputStream(
+        uint32_t devices, int *format, uint32_t *channels, uint32_t *sampleRate,
+        status_t *status, AudioSystem::audio_in_acoustics acoustics)
+{
+    return NULL;	// No audio inputs here.
+}
+
+void AudioFakeHardware::closeInputStream(AudioStreamIn* in)
+{
+    // do nothing
+}
+
+status_t AudioFakeHardware::setVoiceVolume(float volume)
+{
+    return NO_ERROR;
+}
+
+status_t AudioFakeHardware::setMasterVolume(float volume)
+{
+    return NO_ERROR;
+}
+
+status_t AudioFakeHardware::dumpInternals(int fd, const Vector<String16>& args)
+{
+    const size_t SIZE = 256;
+    char buffer[SIZE];
+    String8 result;
+    result.append("AudioFakeHardware::dumpInternals\n");
+    snprintf(buffer, SIZE, "\tmMicMute: %s\n", mMicMute? "true": "false");
+    result.append(buffer);
+    ::write(fd, result.string(), result.size());
+    return NO_ERROR;
+}
+
+status_t AudioFakeHardware::dump(int fd, const Vector<String16>& args)
+{
+    dumpInternals(fd, args);
+    return NO_ERROR;
+}
+
+// ----------------------------------------------------------------------------
+
+status_t AudioAACStreamOut::set(int *pFormat, uint32_t *pChannels, uint32_t *pRate)
+{
+    if (pFormat) *pFormat = format();
+    if (pChannels) *pChannels = channels();
+    if (pRate) *pRate = sampleRate();
+
+    return NO_ERROR;
+}
+
+ssize_t AudioAACStreamOut::write(const void* buffer, size_t bytes)
+{
+	struct timeval end;
+
+	// check if the stored start time is more than .25sec ago - if so, toss it out
+	gettimeofday(&end, NULL);
+	int diff = end.tv_usec-time.tv_usec+1000000ll*(end.tv_sec-time.tv_sec);
+	if(diff>250000||diff<0)	{ // 1/4sec
+		LOGI("Resetting time; had %d diff\n", diff);
+		gettimeofday(&time, NULL);
+	}
+
+	writeToBuffer(bytes/sizeof(unsigned short),(unsigned short*)buffer);	// bytes/2 is because I care about shorts, not bytes
+	gettimeofday(&end, NULL);    
+
+	// advance the time time by a frame
+	time.tv_usec += (bytes * 1000000ll) / sizeof(int16_t) / AudioSystem::popCount(channels()) / sampleRate();
+	if(time.tv_usec>1000000ll) {
+		time.tv_sec++;
+		time.tv_usec-=1000000;
+	}
+
+	diff = time.tv_usec-end.tv_usec+1000000ll*(time.tv_sec-end.tv_sec);
+
+	if(diff>0)	// If it's positive, sleep the difference between the expected end time and the actual end time
+	    usleep(diff);
+
+    return bytes;
+}
+
+status_t AudioAACStreamOut::standby()
+{
+    return NO_ERROR;
+}
+
+status_t AudioAACStreamOut::dump(int fd, const Vector<String16>& args)
+{
+    const size_t SIZE = 256;
+    char buffer[SIZE];
+    String8 result;
+    snprintf(buffer, SIZE, "AudioAACStreamOut::dump\n");
+    snprintf(buffer, SIZE, "\tsample rate: %d\n", sampleRate());
+    snprintf(buffer, SIZE, "\tbuffer size: %d\n", bufferSize());
+    snprintf(buffer, SIZE, "\tchannels: %d\n", channels());
+    snprintf(buffer, SIZE, "\tformat: %d\n", format());
+    result.append(buffer);
+    ::write(fd, result.string(), result.size());
+    return NO_ERROR;
+}
+
+String8 AudioAACStreamOut::getParameters(const String8& keys)
+{
+    AudioParameter param = AudioParameter(keys);
+    return param.toString();
+}
+
+status_t AudioAACStreamOut::getRenderPosition(uint32_t *dspFrames)
+{
+    return INVALID_OPERATION;
+}
+
+//------------------------------------------------------------------------------
+//  Factory
+//------------------------------------------------------------------------------
+
+extern "C" AudioHardwareInterface* createAudioHardware(void) {
+	LOGI("Creating Audio Hardware");
+	setupBuffer();
+    return new AudioFakeHardware();
+}
+
+
+// ----------------------------------------------------------------------------
+
+}; // namespace android

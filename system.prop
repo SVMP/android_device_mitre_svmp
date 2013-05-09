@@ -1,0 +1,8 @@
+ro.sf.lcd_density=120
+hw.keyboard=no
+hw.keyboard.lid=no
+lockscreen.disabled=yes
+
+# 234 is a good DPI for the NexusS.
+
+qemu.hw.mainkeys=0

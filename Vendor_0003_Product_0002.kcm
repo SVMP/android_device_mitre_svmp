@@ -1,0 +1,4 @@
+# Fake key map
+# Only needed to initialize it as a special keyboard
+
+type SPECIAL_FUNCTION
