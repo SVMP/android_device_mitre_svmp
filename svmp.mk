@@ -124,7 +124,8 @@ PRODUCT_PACKAGES += \
 		remote_events \
 		audio.primary.svmp  \
 		sensors.svmp  \
-		libremote_events_jni
+		libremote_events_jni \
+                location_helper
 
 PRODUCT_COPY_FILES += \
     development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
