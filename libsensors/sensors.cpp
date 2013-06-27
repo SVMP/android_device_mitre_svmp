@@ -48,7 +48,7 @@ limitations under the License.
 #include <unistd.h>
 #include <sys/un.h>
 #include <cutils/sockets.h>
-#include "svmp_2.h"
+
 #define LOG_TAG "SVMP"
 #include <cutils/log.h>
 
@@ -56,16 +56,59 @@ limitations under the License.
 #define max(x,y) ((x) > (y) ? (x) : (y))
 
 /*****************************************************************************/
+#define SVMPDEBUG 0
 
-#define SENSORS_ACCELERATION_HANDLE     0
-#define SENSORS_MAGNETIC_FIELD_HANDLE   1
+struct svmp_sensor_event_t {
+	int type;
+	int accuracy;
+	long timestamp;
+	float value[3];
+};
 
-#define HANDLES_MIN						0
-#define HANDLES_MAX						1
+#define SENSOR_HANDLE_ACCELEROMETER       0
+#define SENSOR_HANDLE_MAGNETIC_FIELD      1
+#define SENSOR_HANDLE_ORIENTATION         2
+#define SENSOR_HANDLE_GYROSCOPE           3
+#define SENSOR_HANDLE_LIGHT               4
+#define SENSOR_HANDLE_PRESSURE            5
+//#define SENSOR_HANDLE_TEMPERATURE         5
+#define SENSOR_HANDLE_PROXIMITY           6
+#define SENSOR_HANDLE_GRAVITY             7
+#define SENSOR_HANDLE_LINEAR_ACCELERATION 8
+#define SENSOR_HANDLE_ROTATION_VECTOR     9
+//#define SENSOR_HANDLE_RELATIVE_HUMIDITY   7
+//#define SENSOR_HANDLE_AMBIENT_TEMPERATURE 8
 
-#define SENSORS_ACCELERATION_MAX	( 4.0f * GRAVITY_EARTH )
-#define SENSORS_MAGNETIC_FIELD_MAX	2000.0f
-#define CONVERT_A                   (GRAVITY_EARTH / LSB / NUMOFACCDATA)
+#define HANDLES_MIN 0
+#define HANDLES_MAX 9
+
+#define SENSOR_MAX_ACCELEROMETER       20000.0f
+#define SENSOR_MAX_MAGNETIC_FIELD      20000.0f
+#define SENSOR_MAX_ORIENTATION         20000.0f
+#define SENSOR_MAX_GYROSCOPE           20000.0f
+#define SENSOR_MAX_LIGHT               20000.0f
+#define SENSOR_MAX_PRESSURE            20000.0f
+#define SENSOR_MAX_TEMPERATURE         250.0f
+#define SENSOR_MAX_PROXIMITY           100.0f
+#define SENSOR_MAX_GRAVITY             20000.0f
+#define SENSOR_MAX_LINEAR_ACCELERATION 20000.0f
+#define SENSOR_MAX_ROTATION_VECTOR     20000.0f
+#define SENSOR_MAX_RELATIVE_HUMIDITY   20000.0f
+#define SENSOR_MAX_AMBIENT_TEMPERATURE 250.0f
+
+#define SENSOR_RES_ACCELEROMETER       0.01f
+#define SENSOR_RES_MAGNETIC_FIELD      0.01f
+#define SENSOR_RES_ORIENTATION         0.01f
+#define SENSOR_RES_GYROSCOPE           0.01f
+#define SENSOR_RES_LIGHT               1.0f
+#define SENSOR_RES_PRESSURE            0.01f
+#define SENSOR_RES_TEMPERATURE         0.01f
+#define SENSOR_RES_PROXIMITY           0.1f
+#define SENSOR_RES_GRAVITY             0.01f
+#define SENSOR_RES_LINEAR_ACCELERATION 0.01f
+#define SENSOR_RES_ROTATION_VECTOR     0.01f
+#define SENSOR_RES_RELATIVE_HUMIDITY   0.1f
+#define SENSOR_RES_AMBIENT_TEMPERATURE 0.01f
 
 /*****************************************************************************/
 
@@ -75,39 +118,187 @@ limitations under the License.
 /////////////////////////
 
 struct sensors_event_t events[] = {
-	{	sizeof(struct sensors_event_t), SENSORS_ACCELERATION_HANDLE, SENSOR_TYPE_ACCELEROMETER, 
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_ACCELEROMETER, SENSOR_TYPE_ACCELEROMETER, 
 			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
-	{	sizeof(struct sensors_event_t), SENSORS_MAGNETIC_FIELD_HANDLE, SENSOR_TYPE_MAGNETIC_FIELD, 
-			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	}
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_MAGNETIC_FIELD, SENSOR_TYPE_MAGNETIC_FIELD, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_ORIENTATION, SENSOR_TYPE_ORIENTATION, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_GYROSCOPE, SENSOR_TYPE_GYROSCOPE, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_LIGHT, SENSOR_TYPE_LIGHT, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_PRESSURE, SENSOR_TYPE_PRESSURE, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+//	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_TEMPERATURE, SENSOR_TYPE_TEMPERATURE, 
+//			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_PROXIMITY, SENSOR_TYPE_PROXIMITY, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_GRAVITY, SENSOR_TYPE_GRAVITY, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_LINEAR_ACCELERATION, SENSOR_TYPE_LINEAR_ACCELERATION, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_ROTATION_VECTOR, SENSOR_TYPE_ROTATION_VECTOR, 
+			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+//	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_RELATIVE_HUMIDITY, SENSOR_TYPE_RELATIVE_HUMIDITY, 
+//			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	},
+//	{	sizeof(struct sensors_event_t), SENSOR_HANDLE_AMBIENT_TEMPERATURE, SENSOR_TYPE_AMBIENT_TEMPERATURE, 
+//			0, 0, {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}, {0, 0, 0, 0}	}
 };
 
 // last update time of each device
-struct timeval lastPoll[] = { { 0, 0 }, { 0, 0 } };
+struct timeval lastPoll[] = { {0,0}, {0,0}, {0,0}, {0,0},
+                              {0,0}, {0,0}, {0,0}, {0,0},
+                              {0,0}, {0,0}, {0,0}, {0,0},
+                              {0,0}, {0,0}, {0,0}, {0,0},
+                            };
 
 pthread_t daemon_thread;
 static const struct sensor_t sSensorList[] = {
 
-	{ "MOCSi SVMP Fake Accelerometer",        // name
-	  "MITRE",                                // vendor
-	  1,                                      // version
-	  SENSORS_ACCELERATION_HANDLE,            // handle
-	  SENSOR_TYPE_ACCELEROMETER,              // type
-	  SENSORS_ACCELERATION_MAX,               // maxRange
-	  SENSORS_ACCELERATION_MAX / 32767.0f,    // resolution
-	  0.25f,                                  // power
-	  0,                                      // minDelay 
-	  {}},                                    // reserved
+    { "SVMP Remote Accelerometer",            // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_ACCELEROMETER,            // handle
+      SENSOR_TYPE_ACCELEROMETER,              // type
+      SENSOR_MAX_ACCELEROMETER,               // maxRange
+      SENSOR_RES_ACCELEROMETER,               // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
 
-	 { "MOCSi SVMP Magnetic Field Sensor",    // name
-	  "MITRE",                                // vendor
-	  1,                                      // version
-	  SENSORS_MAGNETIC_FIELD_HANDLE,          // handle
-	  SENSOR_TYPE_MAGNETIC_FIELD,             // type
-	  SENSORS_MAGNETIC_FIELD_MAX,             // maxRange
-	  SENSORS_MAGNETIC_FIELD_MAX / 32767.0f,  // resolution
-	  7.0f,                                   // power
-	  0,                                      // minDelay 
-	  {}}                                     // reserved
+    { "SVMP Remote Magnetic Field Sensor",    // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_MAGNETIC_FIELD,           // handle
+      SENSOR_TYPE_MAGNETIC_FIELD,             // type
+      SENSOR_MAX_MAGNETIC_FIELD,              // maxRange
+      SENSOR_RES_MAGNETIC_FIELD,              // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+    { "SVMP Remote Orientation Sensor",       // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_ORIENTATION,              // handle
+      SENSOR_TYPE_ORIENTATION,                // type
+      SENSOR_MAX_ORIENTATION,                 // maxRange
+      SENSOR_RES_ORIENTATION,                 // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+    { "SVMP Remote Gyroscope",                // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_GYROSCOPE,                // handle
+      SENSOR_TYPE_GYROSCOPE,                  // type
+      SENSOR_MAX_GYROSCOPE,                   // maxRange
+      SENSOR_RES_GYROSCOPE,                   // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+    { "SVMP Remote Light Sensor",             // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_LIGHT,                    // handle
+      SENSOR_TYPE_LIGHT,                      // type
+      SENSOR_MAX_LIGHT,                       // maxRange
+      SENSOR_RES_LIGHT,                       // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+    { "SVMP Remote Pressure Sensor",          // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_PRESSURE,                 // handle
+      SENSOR_TYPE_PRESSURE,                   // type
+      SENSOR_MAX_PRESSURE,                    // maxRange
+      SENSOR_RES_PRESSURE,                    // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+//    { "SVMP Remote Temperature Sensor",       // name
+//      "SVMP",                                 // vendor
+//      1,                                      // version
+//      SENSOR_HANDLE_TEMPERATURE,              // handle
+//      SENSOR_TYPE_TEMPERATURE,                // type
+//      SENSOR_MAX_TEMPERATURE,                 // maxRange
+//      SENSOR_RES_TEMPERATURE,                 // resolution
+//      0.25f,                                  // power
+//      0,                                      // minDelay 
+//      {}},                                    // reserved
+
+    { "SVMP Remote Proximity Sensor",         // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_PROXIMITY,                // handle
+      SENSOR_TYPE_PROXIMITY,                  // type
+      SENSOR_MAX_PROXIMITY,                   // maxRange
+      SENSOR_RES_PROXIMITY,                   // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+    { "SVMP Remote Gravity Sensor",           // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_GRAVITY,                  // handle
+      SENSOR_TYPE_GRAVITY,                    // type
+      SENSOR_MAX_GRAVITY,                     // maxRange
+      SENSOR_RES_GRAVITY,                     // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+    { "SVMP Remote Linear Acceleration Sensor", // name
+      "SVMP",                                   // vendor
+      1,                                        // version
+      SENSOR_HANDLE_LINEAR_ACCELERATION,        // handle
+      SENSOR_TYPE_LINEAR_ACCELERATION,          // type
+      SENSOR_MAX_LINEAR_ACCELERATION,           // maxRange
+      SENSOR_RES_LINEAR_ACCELERATION,           // resolution
+      0.25f,                                    // power
+      0,                                        // minDelay 
+      {}},                                      // reserved
+
+    { "SVMP Remote Rotation Vector Sensor",   // name
+      "SVMP",                                 // vendor
+      1,                                      // version
+      SENSOR_HANDLE_ROTATION_VECTOR,          // handle
+      SENSOR_TYPE_ROTATION_VECTOR,            // type
+      SENSOR_MAX_ROTATION_VECTOR,             // maxRange
+      SENSOR_RES_ROTATION_VECTOR,             // resolution
+      0.25f,                                  // power
+      0,                                      // minDelay 
+      {}},                                    // reserved
+
+//    { "SVMP Remote Relative Humidity Sensor", // name
+//      "SVMP",                                 // vendor
+//      1,                                      // version
+//      SENSOR_HANDLE_RELATIVE_HUMIDITY,        // handle
+//      SENSOR_TYPE_RELATIVE_HUMIDITY,          // type
+//      SENSOR_MAX_RELATIVE_HUMIDITY,           // maxRange
+//      SENSOR_RES_RELATIVE_HUMIDITY,           // resolution
+//      0.25f,                                  // power
+//      0,                                      // minDelay 
+//      {}},                                    // reserved
+
+//    { "SVMP Remote Ambient Temperature Sensor", // name
+//      "SVMP",                                   // vendor
+//      1,                                        // version
+//      SENSOR_HANDLE_AMBIENT_TEMPERATURE,        // handle
+//      SENSOR_TYPE_AMBIENT_TEMPERATURE,          // type
+//      SENSOR_MAX_AMBIENT_TEMPERATURE,           // maxRange
+//      SENSOR_RES_AMBIENT_TEMPERATURE,           // resolution
+//      0.25f,                                    // power
+//      0,                                        // minDelay 
+//      {}},                                      // reserved
+
 };
 
 /////////////////////
@@ -138,26 +329,26 @@ unsigned int eventsNew = 0, sensorsActivated = 0;
 
 //SVMPThread *t = NULL;
 
-void sendSensorActivations() {
-	/*
-	 *if(!t)
-	 *        return;
-	 */
-
-	char activate[6] = { 14, 91, 2, 100, 96, 0 };
-
-	int i;
-	for(i=HANDLES_MIN;i<=HANDLES_MAX;i++) {
-		activate[5] = i;
-		if(sensorsActivated & (1 << i)) {
-			activate[3] = 101;
-		} else {
-			activate[3] = 102;
-		}
-
-		//send(t->fd, activate, 6, 0);
-	}
-}
+//void sendSensorActivations() {
+//	/*
+//	 *if(!t)
+//	 *        return;
+//	 */
+//
+//	char activate[6] = { 14, 91, 2, 100, 96, 0 };
+//
+//	int i;
+//	for(i=HANDLES_MIN;i<=HANDLES_MAX;i++) {
+//		activate[5] = i;
+//		if(sensorsActivated & (1 << i)) {
+//			activate[3] = 101;
+//		} else {
+//			activate[3] = 102;
+//		}
+//
+//		//send(t->fd, activate, 6, 0);
+//	}
+//}
 
 // timestamp for sensor event
 int64_t getTimestamp() {
@@ -170,22 +361,93 @@ int64_t getTimestamp() {
 void handlepacket(struct svmp_sensor_event_t *p) {
 	//INFO("Got a packet of type %d\n",p->type);
         switch(p->type) {
-		case TYPE_ACCELEROMETER:
-			events[SENSORS_ACCELERATION_HANDLE].timestamp = getTimestamp();
-			events[SENSORS_ACCELERATION_HANDLE].data[0] =  p->value[0];
-			events[SENSORS_ACCELERATION_HANDLE].data[1] = p->value[1]; 
-			events[SENSORS_ACCELERATION_HANDLE].data[2] = p->value[2];
+		case SENSOR_TYPE_ACCELEROMETER:
+			events[SENSOR_HANDLE_ACCELEROMETER].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_ACCELEROMETER].acceleration.x =  p->value[0];
+			events[SENSOR_HANDLE_ACCELEROMETER].acceleration.y = p->value[1]; 
+			events[SENSOR_HANDLE_ACCELEROMETER].acceleration.z = p->value[2];
+			events[SENSOR_HANDLE_ACCELEROMETER].acceleration.status = p->accuracy;
                         //INFO("Got accel values %f, %f, %f (%d, %d, %d)\n", events[SENSORS_ACCELERATION_HANDLE].data[0], events[SENSORS_ACCELERATION_HANDLE].data[1], events[SENSORS_ACCELERATION_HANDLE].data[2], p->value[0], p->value[1], p->value[2]);
-			eventsNew |= 1 << SENSORS_ACCELERATION_HANDLE;
+			eventsNew |= 1 << SENSOR_HANDLE_ACCELEROMETER;
 			break;
-		case TYPE_MAGNETIC_FIELD:
-			events[SENSORS_MAGNETIC_FIELD_HANDLE].timestamp = getTimestamp();
-			events[SENSORS_MAGNETIC_FIELD_HANDLE].data[0] = p->value[0];
-			events[SENSORS_MAGNETIC_FIELD_HANDLE].data[1] = p->value[1];
-			events[SENSORS_MAGNETIC_FIELD_HANDLE].data[2] = p->value[2];
-			eventsNew |= 1 << SENSORS_MAGNETIC_FIELD_HANDLE;
+		case SENSOR_TYPE_MAGNETIC_FIELD:
+			events[SENSOR_HANDLE_MAGNETIC_FIELD].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_MAGNETIC_FIELD].magnetic.x = p->value[0];
+			events[SENSOR_HANDLE_MAGNETIC_FIELD].magnetic.y = p->value[1];
+			events[SENSOR_HANDLE_MAGNETIC_FIELD].magnetic.z = p->value[2];
+			events[SENSOR_HANDLE_MAGNETIC_FIELD].magnetic.status = p->accuracy;
+			eventsNew |= 1 << SENSOR_HANDLE_MAGNETIC_FIELD;
 			break;
-
+		case SENSOR_TYPE_ORIENTATION:
+			events[SENSOR_HANDLE_ORIENTATION].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_ORIENTATION].orientation.azimuth = p->value[0];
+			events[SENSOR_HANDLE_ORIENTATION].orientation.pitch = p->value[1];
+			events[SENSOR_HANDLE_ORIENTATION].orientation.roll = p->value[2];
+			events[SENSOR_HANDLE_ORIENTATION].orientation.status = p->accuracy;
+			eventsNew |= 1 << SENSOR_HANDLE_ORIENTATION;
+			break;
+		case SENSOR_TYPE_GYROSCOPE:
+			events[SENSOR_HANDLE_GYROSCOPE].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_GYROSCOPE].gyro.x = p->value[0];
+			events[SENSOR_HANDLE_GYROSCOPE].gyro.y = p->value[1];
+			events[SENSOR_HANDLE_GYROSCOPE].gyro.z = p->value[2];
+			events[SENSOR_HANDLE_GYROSCOPE].gyro.status = p->accuracy;
+			eventsNew |= 1 << SENSOR_HANDLE_GYROSCOPE;
+			break;
+		case SENSOR_TYPE_LIGHT:
+			events[SENSOR_HANDLE_LIGHT].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_LIGHT].light = p->value[0];
+			eventsNew |= 1 << SENSOR_HANDLE_LIGHT;
+			break;
+		case SENSOR_TYPE_PRESSURE:
+			events[SENSOR_HANDLE_PRESSURE].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_PRESSURE].pressure = p->value[0];
+			eventsNew |= 1 << SENSOR_HANDLE_PRESSURE;
+			break;
+//		case SENSOR_TYPE_TEMPERATURE:
+//			events[SENSOR_HANDLE_TEMPERATURE].timestamp = getTimestamp();
+//			events[SENSOR_HANDLE_TEMPERATURE].temperature = p->value[0];
+//			eventsNew |= 1 << SENSOR_HANDLE_TEMPERATURE;
+//			break;
+		case SENSOR_TYPE_PROXIMITY:
+			events[SENSOR_HANDLE_PROXIMITY].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_PROXIMITY].distance = p->value[0];
+			eventsNew |= 1 << SENSOR_HANDLE_PROXIMITY;
+			break;
+		case SENSOR_TYPE_GRAVITY:
+			events[SENSOR_HANDLE_GRAVITY].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_GRAVITY].acceleration.x =  p->value[0];
+			events[SENSOR_HANDLE_GRAVITY].acceleration.y = p->value[1]; 
+			events[SENSOR_HANDLE_GRAVITY].acceleration.z = p->value[2];
+			events[SENSOR_HANDLE_GRAVITY].acceleration.status = p->accuracy;
+			eventsNew |= 1 << SENSOR_HANDLE_GRAVITY;
+			break;
+		case SENSOR_TYPE_LINEAR_ACCELERATION:
+			events[SENSOR_HANDLE_LINEAR_ACCELERATION].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_LINEAR_ACCELERATION].acceleration.x =  p->value[0];
+			events[SENSOR_HANDLE_LINEAR_ACCELERATION].acceleration.y = p->value[1]; 
+			events[SENSOR_HANDLE_LINEAR_ACCELERATION].acceleration.z = p->value[2];
+			events[SENSOR_HANDLE_LINEAR_ACCELERATION].acceleration.status = p->accuracy;
+			eventsNew |= 1 << SENSOR_HANDLE_LINEAR_ACCELERATION;
+			break;
+		case SENSOR_TYPE_ROTATION_VECTOR:
+			events[SENSOR_HANDLE_ROTATION_VECTOR].timestamp = getTimestamp();
+			events[SENSOR_HANDLE_ROTATION_VECTOR].acceleration.x =  p->value[0];
+			events[SENSOR_HANDLE_ROTATION_VECTOR].acceleration.y = p->value[1]; 
+			events[SENSOR_HANDLE_ROTATION_VECTOR].acceleration.z = p->value[2];
+			events[SENSOR_HANDLE_ROTATION_VECTOR].acceleration.status = p->accuracy;
+			eventsNew |= 1 << SENSOR_HANDLE_ROTATION_VECTOR;
+			break;
+//		case SENSOR_TYPE_RELATIVE_HUMIDITY:
+//			events[SENSOR_HANDLE_RELATIVE_HUMIDITY].timestamp = getTimestamp();
+//			events[SENSOR_HANDLE_RELATIVE_HUMIDITY].relative_humidity = p->value[0];
+//			eventsNew |= 1 << SENSOR_HANDLE_RELATIVE_HUMIDITY;
+//			break;
+//		case SENSOR_TYPE_AMBIENT_TEMPERATURE:
+//			events[SENSOR_HANDLE_AMBIENT_TEMPERATURE].timestamp = getTimestamp();
+//			events[SENSOR_HANDLE_AMBIENT_TEMPERATURE].temperature = p->value[0];
+//			eventsNew |= 1 << SENSOR_HANDLE_AMBIENT_TEMPERATURE;
+//			break;
 		default:
 			break;
 			//INFO("unknown sensor type: %d\n",p->type);
@@ -199,13 +461,14 @@ int processPacket(int fd) {
 
 	//struct svmp_sensor_event_t *p = (struct svmp_sensor_event_t*)malloc(sizeof(struct svmp_sensor_event_t));;
 	int len = sizeof(struct svmp_sensor_event_t);
-	char buf [64];
-	struct svmp_sensor_event_t *p = NULL; //malloc(sizeof(struct svmp_sensor_event_t));;
+	//char buf [64];
+	//struct svmp_sensor_event_t *p = NULL; //malloc(sizeof(struct svmp_sensor_event_t));;
+	struct svmp_sensor_event_t event;
 	int tot = 0;
 	int tmp;
-	memset(buf,0,sizeof(buf));
+	memset(&event,0,sizeof(event));
 	ERROR("processing packet \n");
-	tot = read(fd,buf,len);
+	tot = read(fd,&event,sizeof(event));
 	ERROR("processing packet : read %d bytes \n",tot);
 	if (tot < 0) {
 		ERROR("read error : %s\n",strerror(errno));
@@ -216,16 +479,14 @@ int processPacket(int fd) {
 		return tot;
 	}
 
-	p=(struct svmp_sensor_event_t*)buf;
-	ERROR("packet received type :%d, len %d\n",p->type,tot);
-	handlepacket(p);
+	ERROR("packet received type :%d, len %d\n",event.type,tot);
+	handlepacket(&event);
 
 	//free(p);
 	return tot;
 	// sanity check on the packet
 
 }
-
 
 void *daemonListenThread(void* ignore) {
 
@@ -276,7 +537,7 @@ void *daemonListenThread(void* ignore) {
 						FD_SET(newfd,&master);
 						fdmax=max(fdmax,newfd);
 						// initialize sensors
-						sendSensorActivations();
+						//sendSensorActivations();
 					}
 					else 
 						ERROR("accept error: %s\n", strerror(errno));
@@ -324,7 +585,7 @@ static int sensors_close(struct hw_device_t *dev) {
 
 	delete dev;
 	sensorsActivated = 0;
-	sendSensorActivations();
+	//sendSensorActivations();
 
     return 0;
 }
@@ -393,7 +654,7 @@ static int sensors_poll(struct sensors_poll_device_t *dev, sensors_event_t* data
 	}
 
 	if(eventsNew || pos){
-		ERROR("Polling, eventsNew = %d, sensorsActivated = %d, pos = %d\n", eventsNew, pos, sensorsActivated);
+		ERROR("Polling, eventsNew = %d, sensorsActivated = %d, pos = %d\n", eventsNew, sensorsActivated, pos);
 	}
 
 	eventsNew = 0;
