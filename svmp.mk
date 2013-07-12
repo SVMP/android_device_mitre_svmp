@@ -114,11 +114,8 @@ PRODUCT_PROPERTY_OVERRIDES := \
 
 PRODUCT_PACKAGES += \
 		hwcomposer.default \
-		rtspserv \
 		librtsp_jni \
 		fbset \
-		fbstream \
-		fbstream_libs \
 		static_busybox \
 		SVMPProtocol \
 		remote_events \
@@ -126,6 +123,10 @@ PRODUCT_PACKAGES += \
 		sensors.svmp  \
 		libremote_events_jni \
                 location_helper
+
+#		rtspserv \
+#		fbstream \
+#		fbstream_libs \
 
 PRODUCT_COPY_FILES += \
     development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \

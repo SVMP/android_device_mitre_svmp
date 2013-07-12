@@ -326,12 +326,12 @@ service svmpserv /system/bin/svmpserv
     class svmp
     disabled
 
-service rtspserv /system/bin/rtspserv
-    class svmp
+#service rtspserv /system/bin/rtspserv
+#    class svmp
 
 # start fbstream as a service now
-service fbstream /system/bin/logwrapper /system/bin/fbstream
-    socket rtsp_command stream 660 root system
+service fbstream /system/bin/logwrapper /system/bin/fbstream_webrtc
+    socket fbstr_command stream 660 root system
 
 service remote_events /system/bin/remote_events
     class svmp
