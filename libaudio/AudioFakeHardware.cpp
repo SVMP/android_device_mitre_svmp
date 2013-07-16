@@ -80,17 +80,17 @@ extern "C" {
 
 	void setupBuffer() {
 		if(fd>0) {
-			LOGW("Tried to open buffer twice!");
+			ALOGW("Tried to open buffer twice!");
 			return; // already made
 		}
 
 		fd = open("/system/audio_loop", O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
 		if(fd<0) {
-			LOGE("Could not open audio loop buffer!");
+			ALOGE("Could not open audio loop buffer!");
 			return;
 		}
 			
-		LOGE("successfully opened audio loop buffer in /system/audio_loop");
+		ALOGE("successfully opened audio loop buffer in /system/audio_loop");
 	
 
 		// expand file to correct size
@@ -100,9 +100,9 @@ extern "C" {
 		// mmap
 		position = (unsigned short*) mmap(NULL, sizeof(unsigned short)*(BUFFER_SIZE+1), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 		if(!position)
-			LOGE("Could not MMAP audio loop buffer!");
+			ALOGE("Could not MMAP audio loop buffer!");
 
-		LOGI("Opened audio loop successfully.");
+		ALOGI("Opened audio loop successfully.");
 
 		data = position+sizeof(unsigned short);
 	}
@@ -142,7 +142,7 @@ AudioStreamOut* AudioFakeHardware::openOutputStream(
         *status = lStatus;
     }
     if (lStatus == NO_ERROR) {
-		LOGI("Makin' an output...");
+		ALOGI("Makin' an output...");
         return out;
 	}
     delete out;
@@ -151,7 +151,7 @@ AudioStreamOut* AudioFakeHardware::openOutputStream(
 
 void AudioFakeHardware::closeOutputStream(AudioStreamOut* out)
 {
-	LOGI("Gettin' rid of an output...");
+	ALOGI("Gettin' rid of an output...");
     delete out;
 }
 
@@ -214,7 +214,7 @@ ssize_t AudioAACStreamOut::write(const void* buffer, size_t bytes)
 	gettimeofday(&end, NULL);
 	int diff = end.tv_usec-time.tv_usec+1000000ll*(end.tv_sec-time.tv_sec);
 	if(diff>250000||diff<0)	{ // 1/4sec
-		LOGI("Resetting time; had %d diff\n", diff);
+		ALOGI("Resetting time; had %d diff\n", diff);
 		gettimeofday(&time, NULL);
 	}
 
@@ -272,7 +272,7 @@ status_t AudioAACStreamOut::getRenderPosition(uint32_t *dspFrames)
 //------------------------------------------------------------------------------
 
 extern "C" AudioHardwareInterface* createAudioHardware(void) {
-	LOGI("Creating Audio Hardware");
+	ALOGI("Creating Audio Hardware");
 	setupBuffer();
     return new AudioFakeHardware();
 }

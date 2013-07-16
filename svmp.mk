@@ -83,13 +83,16 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     audio_policy.default
 
+PRODUCT_PACKAGES += \
+    local_time.default
+
 PRODUCT_COPY_FILES := \
         system/bluetooth/data/audio.conf:system/etc/bluetooth/audio.conf \
         system/bluetooth/data/auto_pairing.conf:system/etc/bluetooth/auto_pairing.conf \
         system/bluetooth/data/blacklist.conf:system/etc/bluetooth/blacklist.conf \
         system/bluetooth/data/input.conf:system/etc/bluetooth/input.conf \
         system/bluetooth/data/network.conf:system/etc/bluetooth/network.conf \
-        frameworks/base/media/libeffects/data/audio_effects.conf:system/etc/audio_effects.conf \
+        frameworks/av/media/libeffects/data/audio_effects.conf:system/etc/audio_effects.conf \
 	out/target/product/svmp/utilities/busybox:root/sbin/mkfs.ext2
 
 $(call inherit-product-if-exists, frameworks/base/data/fonts/fonts.mk)
@@ -127,14 +130,14 @@ PRODUCT_PACKAGES += \
                 webrtc_helper
 
 PRODUCT_COPY_FILES += \
-    development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
+    device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
     development/tools/emulator/system/camera/media_profiles.xml:system/etc/media_profiles.xml \
     device/mitre/svmp/vold.fstab:system/etc/vold.fstab \
     device/mitre/svmp/init.rc:root/init.rc \
     device/mitre/svmp/init.svmp.rc:root/init.svmp.rc \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
-    frameworks/base/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
+    frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
     device/mitre/svmp/fbstream_webrtc:system/bin/fbstream_webrtc \
     device/mitre/svmp/svmp-fbstream-webrtc2:system/bin/svmp-fbstream-webrtc2 \
     $(KERNEL_BIN):kernel

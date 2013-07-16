@@ -670,7 +670,7 @@ static int open_sensors(const struct hw_module_t* module, const char* id, struct
 	/* initialize sockets, debug */
 
 	ERROR("open_sensors starting");
-	LOGE("open_sensors starting");
+	ALOGE("open_sensors starting");
 
 	pthread_mutex_init(&newpacket_mutex, NULL);
 	pthread_cond_init (&newpacket_cv, NULL);
