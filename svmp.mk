@@ -90,8 +90,7 @@ PRODUCT_COPY_FILES := \
         system/bluetooth/data/input.conf:system/etc/bluetooth/input.conf \
         system/bluetooth/data/network.conf:system/etc/bluetooth/network.conf \
         frameworks/base/media/libeffects/data/audio_effects.conf:system/etc/audio_effects.conf \
-	out/target/product/svmp/utilities/busybox:root/sbin/mkfs.ext2 \
-	external/svmp/fbstream/trunk/out/Release/fbstream_webrtc:system/bin/fbstream_webrtc
+	out/target/product/svmp/utilities/busybox:root/sbin/mkfs.ext2
 
 $(call inherit-product-if-exists, frameworks/base/data/fonts/fonts.mk)
 $(call inherit-product-if-exists, external/lohit-fonts/fonts.mk)
@@ -138,8 +137,11 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/base/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
+    external/svmp/fbstream/trunk/out/Release/fbstream_webrtc:system/bin/fbstream_webrtc \
    $(LOCAL_KERNEL):kernel
 
+external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
+	external/svmp/fbstream/trunk/build.sh
 
 PRODUCT_POLICY := android.policy_phone
 
