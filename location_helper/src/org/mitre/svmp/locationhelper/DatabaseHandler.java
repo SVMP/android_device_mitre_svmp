@@ -91,7 +91,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // prepared statement for speed and security
         Cursor cursor = db.query(
                 Tables[TABLE_SUBSCRIPTIONS], // table
-                new String[]{ "MIN(MinTime)", "MIN(MinDistance)" }, // columns (null == "*")
+                new String[]{ "MIN(MinTime)", "MIN(MinDistance), COUNT(*)" }, // columns (null == "*")
                 "Provider=?", // selection ('where' clause)
                 new String[]{ provider }, // selection args
                 null, // group by
@@ -106,8 +106,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 // get values from query
                 Long minTime = cursor.getLong(0);
                 Float minDistance = cursor.getFloat(1);
+                Integer count = cursor.getInt(2);
 
-                subscription = new Subscription(provider, minTime, minDistance);
+                if( count > 0 ) // if the table is not empty... (aggregate functions return a result regardless)
+                    subscription = new Subscription(provider, minTime, minDistance);
             }
             catch( Exception e ) {
                 e.printStackTrace();
