@@ -123,7 +123,8 @@ PRODUCT_PACKAGES += \
 		sensors.svmp  \
 		libremote_events_jni \
                 location_helper \
-                net_intents
+                net_intents \
+                webrtc_helper
 
 #		rtspserv \
 #		fbstream \
@@ -138,11 +139,13 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/base/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
-    external/svmp/fbstream/trunk/out/Release/fbstream_webrtc:system/bin/fbstream_webrtc \
+    device/mitre/svmp/fbstream_webrtc:system/bin/fbstream_webrtc \
+    device/mitre/svmp/svmp-fbstream-webrtc2:system/bin/svmp-fbstream-webrtc2 \
    $(LOCAL_KERNEL):kernel
 
-external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
-	external/svmp/fbstream/trunk/build.sh
+# using a precompiled binary for now until we figure out in-tree building again for fbstream v3
+#external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
+#	external/svmp/fbstream/trunk/build.sh
 
 PRODUCT_POLICY := android.policy_phone
 

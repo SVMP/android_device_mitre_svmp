@@ -336,6 +336,9 @@ service fbstream /system/bin/logwrapper /system/bin/fbstream_webrtc
 service remote_events /system/bin/remote_events
     class svmp
 
+service webrtc_helper /system/bin/webrtc_helper
+    class svmp
+
 # pass in the resolution to be set x,y
 service fbset  /system/bin/logwrapper /system/bin/fbset 360 480
     oneshot
