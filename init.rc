@@ -331,10 +331,7 @@ service svmpserv /system/bin/svmpserv
 
 # start fbstream as a service now
 service fbstream /system/bin/logwrapper /system/bin/fbstream_webrtc
-    socket fbstr_command stream 660 root system
-
-service remote_events /system/bin/remote_events
-    class svmp
+    #socket fbstr_command stream 660 root system
 
 service webrtc_helper /system/bin/webrtc_helper
     class svmp
@@ -411,7 +408,7 @@ service ril-daemon /system/bin/rild
 
 service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
     socket zygote stream 666
-    socket svmp_sensors stream 660 root system
+    socket svmp_sensors stream 660 root net_admin
     onrestart write /sys/android_power/request_state wake
     onrestart write /sys/power/state on
     onrestart restart media

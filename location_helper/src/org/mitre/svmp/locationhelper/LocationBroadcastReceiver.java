@@ -104,8 +104,8 @@ public class LocationBroadcastReceiver extends BroadcastReceiver {
             handler.close();
         }
         // we also receive the BOOT_COMPLETED broadcast intent to start this service as soon as the phone boots up
-        else if( intent.getAction().equals("android.intent.action.BOOT_COMPLETED") ) {
-            Log.d(TAG, "Received system boot intent broadcast");
+        else if( intent.getAction().equals("org.mitre.svmp.action.BOOT_COMPLETED") ) {
+            Log.d(TAG, "Received SVMP boot intent broadcast");
 
             // create a new DatabaseHandler; "true" tells it to drop old subscription data
             // this only happens once, after the VM boots
