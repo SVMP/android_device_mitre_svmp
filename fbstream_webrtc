@@ -1,7 +1,0 @@
-#!/system/bin/sh
-
-# Until we figure out a way to get the STUN host in here, we'll have to
-# start it manually by adb shell.
-
-#WEBRTC_CONNECT=stun:<ip or host>:3478
-#/system/bin/svmp-fbstream-webrtc2 --server 127.0.0.1

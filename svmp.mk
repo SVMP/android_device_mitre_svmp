@@ -147,6 +147,13 @@ PRODUCT_COPY_FILES += \
 #external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
 #	external/svmp/fbstream/trunk/build.sh
 
+.PHONY : do_fbstream
+
+do_fbstream:
+	device/mitre/svmp/fbstream-config.sh
+
+device/mitre/svmp/fbstream_webrtc: do_fbstream
+
 PRODUCT_POLICY := android.policy_phone
 
 PRODUCT_NAME := svmp
