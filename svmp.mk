@@ -122,7 +122,6 @@ PRODUCT_PACKAGES += \
 		audio.primary.svmp  \
 		sensors.svmp  \
 		libremote_events_jni \
-                location_helper \
                 net_intents \
                 webrtc_helper
 
