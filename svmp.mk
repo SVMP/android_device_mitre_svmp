@@ -124,10 +124,6 @@ PRODUCT_PACKAGES += \
 		libremote_events_jni \
                 webrtc_helper
 
-#		rtspserv \
-#		fbstream \
-#		fbstream_libs \
-
 PRODUCT_COPY_FILES += \
     development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
     development/tools/emulator/system/camera/media_profiles.xml:system/etc/media_profiles.xml \
@@ -146,10 +142,8 @@ PRODUCT_COPY_FILES += \
 #	external/svmp/fbstream/trunk/build.sh
 
 .PHONY : do_fbstream
-
 do_fbstream:
 	device/mitre/svmp/fbstream-config.sh
-
 device/mitre/svmp/fbstream_webrtc: do_fbstream
 
 PRODUCT_POLICY := android.policy_phone
