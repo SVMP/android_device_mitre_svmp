@@ -30,7 +30,7 @@ PRODUCT_PACKAGES += \
 		audio.primary.svmp  \
 		sensors.svmp  \
 		libremote_events_jni \
-		webrtc_helper
+		libjingle_peerconnection_so.so
 
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
@@ -43,8 +43,6 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
-    device/mitre/svmp/fbstream_webrtc:system/bin/fbstream_webrtc \
-    device/mitre/svmp/svmp-fbstream-webrtc:system/bin/svmp-fbstream \
     $(KERNEL_BIN):kernel
 
 ifeq ($(SVMP_BUILD_TYPE),virtio)
@@ -52,15 +50,6 @@ ifeq ($(SVMP_BUILD_TYPE),virtio)
 else
     PRODUCT_COPY_FILES += device/mitre/svmp/fstab.svmp:root/fstab.svmp
 endif
-
-# using a precompiled binary for now until we figure out in-tree building again for fbstream v3
-#external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
-#	external/svmp/fbstream/trunk/build.sh
-
-.PHONY : do_fbstream
-do_fbstream:
-	device/mitre/svmp/fbstream-config.sh
-device/mitre/svmp/fbstream_webrtc: do_fbstream
 
 
 # No need to specify -j for the submake because the parent make process
