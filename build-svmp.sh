@@ -16,6 +16,9 @@ echo
 echo "Please enter the hostname or IP address of the server the VM should use: [$SVMP_STUN_HOST]"
 read answer
 if [ -z $answer ] ; then
+  answer=$SVMP_STUN_HOST
+fi
+if [ -z $answer ] ; then
   echo "You didn't enter a STUN server for SVMP to use. Exiting."
   exit 1
 fi
