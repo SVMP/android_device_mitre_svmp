@@ -106,7 +106,9 @@ PRODUCT_NAME := generic_no_telephony
 
 LOCAL_PATH := $(call my-dir)
 
-LOCAL_KERNEL := device/mitre/svmp/kernel
+KERNEL_SRC := kernel/android-3.4
+KERNEL_BIN := $(KERNEL_SRC)/arch/x86/boot/bzImage
+SVMP_KERN_CONFIG := device/mitre/svmp/svmp-kernel.config
 
 PRODUCT_PROPERTY_OVERRIDES := \
     ro.ril.hsxpa=1 \
@@ -135,7 +137,7 @@ PRODUCT_COPY_FILES += \
     frameworks/base/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
     device/mitre/svmp/fbstream_webrtc:system/bin/fbstream_webrtc \
     device/mitre/svmp/svmp-fbstream-webrtc2:system/bin/svmp-fbstream-webrtc2 \
-   $(LOCAL_KERNEL):kernel
+    $(KERNEL_BIN):kernel
 
 # using a precompiled binary for now until we figure out in-tree building again for fbstream v3
 #external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
@@ -145,6 +147,16 @@ PRODUCT_COPY_FILES += \
 do_fbstream:
 	device/mitre/svmp/fbstream-config.sh
 device/mitre/svmp/fbstream_webrtc: do_fbstream
+
+
+# No need to specify -j for the submake because the parent make process
+# will communicate the information to the child
+.PHONY: build_kernel
+build_kernel:
+	cp $(SVMP_KERN_CONFIG) $(KERNEL_SRC)/.config
+	$(MAKE) ARCH=x86 bzImage -C $(KERNEL_SRC)
+$(KERNEL_BIN): build_kernel
+
 
 PRODUCT_POLICY := android.policy_phone
 
