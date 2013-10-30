@@ -1,3 +1,9 @@
+on early-init
+    export EXTERNAL_STORAGE /mnt/sdcard
+    mkdir /mnt/sdcard 0000 system system
+    # for backwards compatibility
+    symlink /mnt/sdcard /sdcard
+
 on boot
     setprop ARGH ARGH
 #    setprop net.eth0.dns1 10.0.2.3
@@ -16,7 +22,20 @@ on boot
     stop dund
     stop akmd
 
+# start essential services
+    start qemud
+    start svmp-logcat
+#   start goldfish-setup
+    start netcfg
+
     setprop ro.setupwizard.mode EMULATOR
+
+on fs
+# mount sda (system) and sdb (data) partitions
+    mount ext4 /dev/block/sda6 /system
+    mount ext4 /dev/block/sda6 /system ro remount
+    mount ext4 /dev/block/sdb6 /data nosuid nodev
+    mount ext4 /dev/block/sdb7 /cache nosuid nodev
 
 #on device-added-/dev/block/vdb
 #on fs   
@@ -55,12 +74,18 @@ service dhcpcd_eth0 /system/bin/dhcpcd -B
 	oneshot
 
 service dhcpcd_eth0_old /system/bin/netcfg eth0 dhcp
-        oneshot
-        disabled
+	oneshot
+	disabled
 
 
 #service goldfish-setup /system/etc/init.goldfish.sh
 #   oneshot
+
+service qemu-props /system/bin/qemu-props
+    class core
+    user root
+    group root
+    oneshot
 
 service qemud /system/bin/qemud
     socket qemud    stream 666
@@ -70,7 +95,11 @@ service qemud /system/bin/qemud
 # program to check wether it runs on the emulator
 # if it does, it redirects its output to the device
 # named by the androidboot.console kernel option
-# if not, is simply exit immediately
+# if not, it simply exits immediately
 
-service goldfish-logcat /system/bin/logcat -Q
+service svmp-logcat /system/bin/logcat -Q
+    oneshot
+
+# Enable networking so that adb can connect
+service netcfg /system/bin/netcfg eth0 dhcp
     oneshot

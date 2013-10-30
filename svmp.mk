@@ -21,7 +21,9 @@ PRODUCT_PACKAGES := \
     libWnnEngDic \
     libWnnJpnDic \
     libwnndict \
+    FusedLocation \
     WAPPushManager
+
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
@@ -127,12 +129,13 @@ PRODUCT_PACKAGES += \
 		audio.primary.svmp  \
 		sensors.svmp  \
 		libremote_events_jni \
-                webrtc_helper
+		webrtc_helper
 
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
     development/tools/emulator/system/camera/media_profiles.xml:system/etc/media_profiles.xml \
-    device/mitre/svmp/vold.fstab:system/etc/vold.fstab \
+    system/core/rootdir/etc/vold.fstab:system/etc/vold.fstab \
+    device/generic/goldfish/data/etc/vold.conf:system/etc/vold.conf \
     device/mitre/svmp/init.rc:root/init.rc \
     device/mitre/svmp/init.svmp.rc:root/init.svmp.rc \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
