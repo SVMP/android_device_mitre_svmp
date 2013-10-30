@@ -4,6 +4,8 @@ ifdef NET_ETH0_STARTONBOOT
   PRODUCT_PROPERTY_OVERRIDES += net.eth0.startonboot=1
 endif
 
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
+
 ############## MOCSI ###########
 
 DEVICE_PACKAGE_OVERLAYS := device/mitre/svmp/overlay
@@ -33,6 +35,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
     development/tools/emulator/system/camera/media_profiles.xml:system/etc/media_profiles.xml \
+    development/tools/emulator/system/camera/media_codecs.xml:system/etc/media_codecs.xml \
     system/core/rootdir/etc/vold.fstab:system/etc/vold.fstab \
     device/generic/goldfish/data/etc/vold.conf:system/etc/vold.conf \
     device/mitre/svmp/init.rc:root/init.rc \
@@ -62,6 +65,7 @@ build_kernel:
 	$(MAKE) ARCH=x86 bzImage -C $(KERNEL_SRC)
 $(KERNEL_BIN): build_kernel
 
+$(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
 PRODUCT_POLICY := android.policy_phone
 
