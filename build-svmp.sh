@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # script gets run with AOSP root as its working dir, so need full path
 #OUT_FILE=device/mitre/svmp/fbstream_webrtc
@@ -54,6 +54,7 @@ then
   rm device/mitre/svmp/fbstream_webrtc
   . build/envsetup.sh
   lunch svmp-eng
-  m android_system_disk_vdi android_system_disk_vmdk -j$NUM_PROCS
+  export INIT_BOOTCHART=true
+  m android_mitre_images android_system_disk_vdi android_system_disk_vmdk android_data_disk_vdi -j$NUM_PROCS
 fi
 
