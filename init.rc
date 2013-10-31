@@ -4,7 +4,6 @@
 # This is a common source of Android security bugs.
 #
 
-import /init.usb.rc
 import /init.${ro.hardware}.rc
 import /init.trace.rc
 
@@ -240,6 +239,8 @@ on post-fs-data
     # Set indication (checked by vold) that we have finished this action
     #setprop vold.post_fs_data_done 1
 
+    start sdcard
+
 on boot
 # basic network init
     ifup lo
@@ -254,46 +255,46 @@ on boot
 # Memory management.  Basic kernel parameters, and allow the high
 # level system server to be able to adjust the kernel OOM driver
 # parameters to match how it is managing things.
-    #write /proc/sys/vm/overcommit_memory 1
-    #write /proc/sys/vm/min_free_order_shift 4
-    #chown root system /sys/module/lowmemorykiller/parameters/adj
-    #chmod 0664 /sys/module/lowmemorykiller/parameters/adj
-    #chown root system /sys/module/lowmemorykiller/parameters/minfree
-    #chmod 0664 /sys/module/lowmemorykiller/parameters/minfree
+    write /proc/sys/vm/overcommit_memory 1
+    write /proc/sys/vm/min_free_order_shift 4
+    chown root system /sys/module/lowmemorykiller/parameters/adj
+    chmod 0664 /sys/module/lowmemorykiller/parameters/adj
+    chown root system /sys/module/lowmemorykiller/parameters/minfree
+    chmod 0664 /sys/module/lowmemorykiller/parameters/minfree
 
-# Define the oom_adj values for the classes of processes that can be
-# killed by the kernel.  These are used in ActivityManagerService.
-    setprop ro.FOREGROUND_APP_ADJ 0
-    setprop ro.VISIBLE_APP_ADJ 1
-    setprop ro.PERCEPTIBLE_APP_ADJ 2
-    setprop ro.HEAVY_WEIGHT_APP_ADJ 3
-    setprop ro.SECONDARY_SERVER_ADJ 4
-    setprop ro.BACKUP_APP_ADJ 5
-    setprop ro.HOME_APP_ADJ 6
-    setprop ro.HIDDEN_APP_MIN_ADJ 7
-    setprop ro.EMPTY_APP_ADJ 15
-
-# Define the memory thresholds at which the above process classes will
-# be killed.  These numbers are in pages (4k).
-    setprop ro.FOREGROUND_APP_MEM 2048
-    setprop ro.VISIBLE_APP_MEM 3072
-    setprop ro.PERCEPTIBLE_APP_MEM 4096
-    setprop ro.HEAVY_WEIGHT_APP_MEM 4096
-    setprop ro.SECONDARY_SERVER_MEM 6144
-    setprop ro.BACKUP_APP_MEM 6144
-    setprop ro.HOME_APP_MEM 6144
-    setprop ro.HIDDEN_APP_MEM 7168
-    setprop ro.EMPTY_APP_MEM 8192
+## Define the oom_adj values for the classes of processes that can be
+## killed by the kernel.  These are used in ActivityManagerService.
+#    setprop ro.FOREGROUND_APP_ADJ 0
+#    setprop ro.VISIBLE_APP_ADJ 1
+#    setprop ro.PERCEPTIBLE_APP_ADJ 2
+#    setprop ro.HEAVY_WEIGHT_APP_ADJ 3
+#    setprop ro.SECONDARY_SERVER_ADJ 4
+#    setprop ro.BACKUP_APP_ADJ 5
+#    setprop ro.HOME_APP_ADJ 6
+#    setprop ro.HIDDEN_APP_MIN_ADJ 7
+#    setprop ro.EMPTY_APP_ADJ 15
+#
+## Define the memory thresholds at which the above process classes will
+## be killed.  These numbers are in pages (4k).
+#    setprop ro.FOREGROUND_APP_MEM 2048
+#    setprop ro.VISIBLE_APP_MEM 3072
+#    setprop ro.PERCEPTIBLE_APP_MEM 4096
+#    setprop ro.HEAVY_WEIGHT_APP_MEM 4096
+#    setprop ro.SECONDARY_SERVER_MEM 6144
+#    setprop ro.BACKUP_APP_MEM 6144
+#    setprop ro.HOME_APP_MEM 6144
+#    setprop ro.HIDDEN_APP_MEM 7168
+#    setprop ro.EMPTY_APP_MEM 8192
 
 # Write value must be consistent with the above properties.
 # Note that the driver only supports 6 slots, so we have combined some of
 # the classes into the same memory level; the associated processes of higher
 # classes will still be killed first.
-    write /sys/module/lowmemorykiller/parameters/adj 0,1,2,4,7,15
+    #write /sys/module/lowmemorykiller/parameters/adj 0,1,2,4,7,15
 
-    write /proc/sys/vm/overcommit_memory 1
-    write /proc/sys/vm/min_free_order_shift 4
-    write /sys/module/lowmemorykiller/parameters/minfree 2048,3072,4096,6144,7168,8192
+    #write /proc/sys/vm/overcommit_memory 1
+    #write /proc/sys/vm/min_free_order_shift 4
+    #write /sys/module/lowmemorykiller/parameters/minfree 2048,3072,4096,6144,7168,8192
 
 
     # Tweak background writeout
@@ -414,19 +415,8 @@ on property:vold.decrypt=trigger_shutdown_framework
     class_reset late_start
     class_reset main
 
-#service sdcard /system/bin/sdcard /data/media 1023 1023
-#	class predefault
-#	oneshot
-
 service fixaudio /system/bin/fixaudio.sh
     oneshot 
-
-service svmpserv /system/bin/svmpserv
-    oneshot
-    socket svmp_daemon stream 660 root system
-    socket svmp_raw stream 660 root system
-    class svmp
-    #disabled
 
 #service rtspserv /system/bin/rtspserv
 #    class svmp
@@ -441,14 +431,6 @@ service webrtc_helper /system/bin/webrtc_helper
 # pass in the resolution to be set x,y
 service fbset  /system/bin/logwrapper /system/bin/fbset 360 480
     oneshot
-    class svmp
-    #disabled
-
-service faketouch /system/bin/faketouch
-    class svmp
-    #disabled
-
-service fakekey /system/bin/fakekey
     class svmp
     #disabled
 
@@ -470,8 +452,7 @@ service console /system/bin/sh
     user shell
     group log
 
-#on property:ro.debuggable=1
-on property:ro.secure=0
+on property:ro.debuggable=1
     start console
 
 # adbd is controlled via property triggers in init.<platform>.usb.rc
@@ -484,12 +465,6 @@ service adbd /sbin/adbd
 # adbd on at boot in emulator
 on property:ro.kernel.qemu=1
     start adbd
-
-on property:persist.service.adb.enable=1
-    start adbd
-
-on property:persist.service.adb.enable=0
-    stop adbd
 
 service servicemanager /system/bin/servicemanager
     class core
