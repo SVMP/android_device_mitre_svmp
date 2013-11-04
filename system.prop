@@ -6,3 +6,11 @@ lockscreen.disabled=yes
 # 234 is a good DPI for the NexusS.
 
 qemu.hw.mainkeys=0
+
+# Headless and wifi display mode stuff
+
+# seems to help a tiny bit, but still yields lots of "Timed out waiting for hw vsync; faking it"
+debug.sf.no_hw_vsync=1
+
+#ro.config.headless=1
+persist.debug.wfd.enable=1

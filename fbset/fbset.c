@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
 	var.xres_virtual = var.xres; 
 	// needed for page flipping
-	var.yres_virtual = var.yres;
+	var.yres_virtual = 3 * var.yres;
 //
 // 1/4/2012 -- use defaults in gralloc/framebuffer.cpp
 //
@@ -92,6 +92,8 @@ int main(int argc, char** argv) {
  */
 
 	var.yoffset = var.yres;
+
+	var.pixclock = 130000;
 
 	var.bits_per_pixel=16;
 	var.grayscale=0;
