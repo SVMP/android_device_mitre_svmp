@@ -40,13 +40,18 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/vold.conf:system/etc/vold.conf \
     device/mitre/svmp/init.rc:root/init.rc \
     device/mitre/svmp/init.svmp.rc:root/init.svmp.rc \
-    device/mitre/svmp/fstab.svmp:root/fstab.svmp \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
     device/mitre/svmp/fbstream_webrtc:system/bin/fbstream_webrtc \
     device/mitre/svmp/svmp-fbstream-webrtc2:system/bin/svmp-fbstream-webrtc2 \
     $(KERNEL_BIN):kernel
+
+ifeq ($(SVMP_BUILD_TYPE),virtio)
+    PRODUCT_COPY_FILES += device/mitre/svmp/fstab.svmp.virtio:root/fstab.svmp
+else
+    PRODUCT_COPY_FILES += device/mitre/svmp/fstab.svmp:root/fstab.svmp
+endif
 
 # using a precompiled binary for now until we figure out in-tree building again for fbstream v3
 #external/svmp/fbstream/trunk/out/Release/fbstream_webrtc :
