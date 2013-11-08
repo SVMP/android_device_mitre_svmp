@@ -1,23 +1,20 @@
 on early-init
-    export EXTERNAL_STORAGE /mnt/sdcard
-    #mkdir /mnt/sdcard 0000 system system
-    mkdir /mnt/sdcard 0555 root root
-    # for backwards compatibility
-    symlink /mnt/sdcard /sdcard
+    mkdir /mnt/shell 0700 shell shell
+    mkdir /storage 0050 root sdcard_r
 
     # See storage config details at http://source.android.com/tech/storage/
-    #mkdir /mnt/shell/emulated 0700 shell shell
-    #mkdir /storage/emulated 0555 root root
+    mkdir /mnt/shell/emulated 0700 shell shell
+    mkdir /storage/emulated 0555 root root
 
-    #export EXTERNAL_STORAGE /storage/emulated/legacy
-    #export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
-    #export EMULATED_STORAGE_TARGET /storage/emulated
+    export EXTERNAL_STORAGE /storage/emulated/legacy
+    export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
+    export EMULATED_STORAGE_TARGET /storage/emulated
 
     ## Support legacy paths
-    #symlink /storage/emulated/legacy /sdcard
-    #symlink /storage/emulated/legacy /mnt/sdcard
-    #symlink /storage/emulated/legacy /storage/sdcard0
-    #symlink /mnt/shell/emulated/0 /storage/emulated/legacy
+    symlink /storage/emulated/legacy /sdcard
+    symlink /storage/emulated/legacy /mnt/sdcard
+    symlink /storage/emulated/legacy /storage/sdcard0
+    symlink /mnt/shell/emulated/0 /storage/emulated/legacy
 
 on boot
     setprop ARGH ARGH
@@ -40,24 +37,14 @@ on boot
 # start essential services
     start qemud
     start svmp-logcat
-#   start goldfish-setup
     start netcfg
 
     setprop ro.setupwizard.mode EMULATOR
 
 on fs
 # mount sda (system) and sdb (data) partitions
-    mount ext4 /dev/block/sda6 /system
-    mount ext4 /dev/block/sda6 /system ro remount
-    mount ext4 /dev/block/sdb6 /data nosuid nodev
-    mount ext4 /dev/block/sdb7 /cache nosuid nodev
-
-#on device-added-/dev/block/vdb
-#on fs   
-#    mount ext4 /dev/block/vda6 /system
-#    mount ext4 /dev/block/vda6 /system ro remount
-#    mount ext4 /dev/block/vdb6 /data nosuid nodev wait
-#    mount ext4 /dev/block/vdb7 /cache nosuid nodev wait
+    mount_all /fstab.svmp
+    setprop ro.crypto.fuse_sdcard true
 
 # enable Google-specific location features,
 # like NetworkLocationProvider and LocationCollector
@@ -80,28 +67,15 @@ on fs
 ###
 
 # virtual sdcard daemon running as media_rw (1023)
-#service sdcard /system/bin/sdcard /data/media /mnt/shell/emulated 1023 1023
-service sdcard /system/bin/sdcard /data/media /mnt/sdcard 1023 1023
+service sdcard /system/bin/sdcard /data/media /mnt/shell/emulated 1023 1023
     class late_start
-    disabled
 
 on post-fs-data
 	mkdir /data/misc/dhcp 0770 dhcp dhcp
 	chown dhcp dhcp /data/misc/dhcp
     mkdir /data/media 0770 media_rw media_rw
 
-service dhcpcd_eth0 /system/bin/dhcpcd -B 
-	class main
-	disabled
-	oneshot
-
-service dhcpcd_eth0_old /system/bin/netcfg eth0 dhcp
-	oneshot
-	disabled
-
-
-#service goldfish-setup /system/etc/init.goldfish.sh
-#   oneshot
+    setprop vold.post_fs_data_done 1
 
 service qemu-props /system/bin/qemu-props
     class core

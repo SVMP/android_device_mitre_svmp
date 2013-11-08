@@ -57,8 +57,8 @@ loglevel 3
     mkdir /config 0500 root root
 
     # See storage config details at http://source.android.com/tech/storage/
-    mkdir /mnt/shell 0700 shell shell
-    mkdir /storage 0050 root sdcard_r
+    #mkdir /mnt/shell 0700 shell shell
+    #mkdir /storage 0050 root sdcard_r
 
     # Directory for putting things only root should see.
     mkdir /mnt/secure 0700 root root
@@ -239,8 +239,6 @@ on post-fs-data
     # Set indication (checked by vold) that we have finished this action
     #setprop vold.post_fs_data_done 1
 
-    start sdcard
-
 on boot
 # basic network init
     ifup lo
@@ -249,8 +247,6 @@ on boot
 
 # set RLIMIT_NICE to allow priorities from 19 to -20
     setrlimit 13 40 40
-
-    
 
 # Memory management.  Basic kernel parameters, and allow the high
 # level system server to be able to adjust the kernel OOM driver
@@ -261,41 +257,6 @@ on boot
     chmod 0664 /sys/module/lowmemorykiller/parameters/adj
     chown root system /sys/module/lowmemorykiller/parameters/minfree
     chmod 0664 /sys/module/lowmemorykiller/parameters/minfree
-
-## Define the oom_adj values for the classes of processes that can be
-## killed by the kernel.  These are used in ActivityManagerService.
-#    setprop ro.FOREGROUND_APP_ADJ 0
-#    setprop ro.VISIBLE_APP_ADJ 1
-#    setprop ro.PERCEPTIBLE_APP_ADJ 2
-#    setprop ro.HEAVY_WEIGHT_APP_ADJ 3
-#    setprop ro.SECONDARY_SERVER_ADJ 4
-#    setprop ro.BACKUP_APP_ADJ 5
-#    setprop ro.HOME_APP_ADJ 6
-#    setprop ro.HIDDEN_APP_MIN_ADJ 7
-#    setprop ro.EMPTY_APP_ADJ 15
-#
-## Define the memory thresholds at which the above process classes will
-## be killed.  These numbers are in pages (4k).
-#    setprop ro.FOREGROUND_APP_MEM 2048
-#    setprop ro.VISIBLE_APP_MEM 3072
-#    setprop ro.PERCEPTIBLE_APP_MEM 4096
-#    setprop ro.HEAVY_WEIGHT_APP_MEM 4096
-#    setprop ro.SECONDARY_SERVER_MEM 6144
-#    setprop ro.BACKUP_APP_MEM 6144
-#    setprop ro.HOME_APP_MEM 6144
-#    setprop ro.HIDDEN_APP_MEM 7168
-#    setprop ro.EMPTY_APP_MEM 8192
-
-# Write value must be consistent with the above properties.
-# Note that the driver only supports 6 slots, so we have combined some of
-# the classes into the same memory level; the associated processes of higher
-# classes will still be killed first.
-    #write /sys/module/lowmemorykiller/parameters/adj 0,1,2,4,7,15
-
-    #write /proc/sys/vm/overcommit_memory 1
-    #write /proc/sys/vm/min_free_order_shift 4
-    #write /sys/module/lowmemorykiller/parameters/minfree 2048,3072,4096,6144,7168,8192
-
 
     # Tweak background writeout
     write /proc/sys/vm/dirty_expire_centisecs 200
@@ -384,7 +345,6 @@ on boot
 
     class_start core
     class_start main
-    class_start dhcpcd_eth0_old
     class_start default
     # start svmp process AFTER 
     class_start svmp
@@ -418,9 +378,6 @@ on property:vold.decrypt=trigger_shutdown_framework
 service fixaudio /system/bin/fixaudio.sh
     oneshot 
 
-#service rtspserv /system/bin/rtspserv
-#    class svmp
-
 # start fbstream as a service now
 service fbstream /system/bin/logwrapper /system/bin/fbstream_webrtc
     #socket fbstr_command stream 660 root system
@@ -429,7 +386,7 @@ service webrtc_helper /system/bin/webrtc_helper
     class svmp
 
 # pass in the resolution to be set x,y
-service fbset  /system/bin/logwrapper /system/bin/fbset 360 480
+service fbset /system/bin/logwrapper /system/bin/fbset 360 480
     oneshot
     class svmp
     #disabled
@@ -475,8 +432,6 @@ service servicemanager /system/bin/servicemanager
     onrestart restart media
     onrestart restart surfaceflinger
     onrestart restart drm
-    onrestart restart dhcpcd_eth0
-    onrestart restart dhcpcd_eth0_old
 
 service vold /system/bin/vold
     class core
@@ -525,47 +480,10 @@ service media /system/bin/mediaserver
     group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc
     ioprio rt 4
 
-service bootanim /system/bin/logwrapper /system/bin/bootanimation
+service bootanim /system/bin/bootanimation
     class main
     user graphics
     group graphics
-    disabled
-    oneshot
-
-service dbus /system/bin/dbus-daemon --system --nofork
-    socket dbus stream 660 bluetooth bluetooth
-    user bluetooth
-    group bluetooth net_bt_admin
-
-service bluetoothd /system/bin/bluetoothd -n
-    socket bluetooth stream 660 bluetooth bluetooth
-    socket dbus_bluetooth stream 660 bluetooth bluetooth
-    # init.rc does not yet support applying capabilities, so run as root and
-    # let bluetoothd drop uid to bluetooth with the right linux capabilities
-    group bluetooth net_bt_admin misc
-    disabled
-
-service hfag /system/bin/sdptool add --channel=10 HFAG
-    user bluetooth
-    group bluetooth net_bt_admin
-    disabled
-    oneshot
-
-service hsag /system/bin/sdptool add --channel=11 HSAG
-    user bluetooth
-    group bluetooth net_bt_admin
-    disabled
-    oneshot
-
-service opush /system/bin/sdptool add --channel=12 OPUSH
-    user bluetooth
-    group bluetooth net_bt_admin
-    disabled
-    oneshot
-
-service pbap /system/bin/sdptool add --channel=19 PBAP
-    user bluetooth
-    group bluetooth net_bt_admin
     disabled
     oneshot
 

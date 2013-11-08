@@ -40,6 +40,7 @@ PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/vold.conf:system/etc/vold.conf \
     device/mitre/svmp/init.rc:root/init.rc \
     device/mitre/svmp/init.svmp.rc:root/init.svmp.rc \
+    device/mitre/svmp/fstab.svmp:root/fstab.svmp \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
