@@ -15,13 +15,13 @@ fi
 STUNURL=stun:$SVMP_STUN_HOST:$SVMP_STUN_PORT
 
 echo "Fbstream will be started with the command line:"
-echo "WEBRTC_CONNECT=$STUNURL /system/bin/svmp-fbstream-webrtc2 --server 127.0.0.1"
+echo "WEBRTC_CONNECT=$STUNURL /system/bin/svmp-fbstream --server 127.0.0.1"
 
 cat > $OUT_FILE <<EOF
 #!/system/bin/sh
 
-WEBRTC_CONNECT=$STUNURL
-/system/bin/svmp-fbstream-webrtc2 --server 127.0.0.1
+export WEBRTC_CONNECT=$STUNURL
+/system/bin/svmp-fbstream --server 127.0.0.1
 
 EOF
 chmod 755 $OUT_FILE

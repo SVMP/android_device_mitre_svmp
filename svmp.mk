@@ -44,7 +44,7 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
     device/mitre/svmp/fbstream_webrtc:system/bin/fbstream_webrtc \
-    device/mitre/svmp/svmp-fbstream-webrtc2:system/bin/svmp-fbstream-webrtc2 \
+    device/mitre/svmp/svmp-fbstream-webrtc:system/bin/svmp-fbstream \
     $(KERNEL_BIN):kernel
 
 ifeq ($(SVMP_BUILD_TYPE),virtio)
