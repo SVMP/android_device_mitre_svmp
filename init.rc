@@ -378,19 +378,6 @@ on property:vold.decrypt=trigger_shutdown_framework
 service fixaudio /system/bin/fixaudio.sh
     oneshot 
 
-# start fbstream as a service now
-#service fbstream /system/bin/logwrapper /system/bin/fbstream_webrtc
-    #socket fbstr_command stream 660 root system
-
-#service webrtc_helper /system/bin/webrtc_helper
-#    class svmp
-
-# pass in the resolution to be set x,y
-service fbset /system/bin/logwrapper /system/bin/fbset 360 480
-    oneshot
-    class svmp
-    #disabled
-
 ## Daemon processes to be run by init.
 ##
 service ueventd /sbin/ueventd
