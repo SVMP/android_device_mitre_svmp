@@ -110,3 +110,7 @@ service fbperms /system/bin/logwrapper /system/bin/chmod 777 /dev/graphics/fb0
 service fbset /system/bin/logwrapper /system/bin/fbset 360 480
     oneshot
     class svmp
+
+# Start sshd service
+service start-ssh /system/bin/start-ssh
+    oneshot

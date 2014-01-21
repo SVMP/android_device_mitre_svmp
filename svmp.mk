@@ -30,7 +30,9 @@ PRODUCT_PACKAGES += \
 		audio.primary.svmp  \
 		sensors.svmp  \
 		libremote_events_jni \
-		libjingle_peerconnection_so.so
+		libjingle_peerconnection_so.so \
+		scp sftp sshd ssh-keygen start-ssh \
+		Email
 
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
@@ -43,6 +45,7 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/fixaudio.sh:system/bin/fixaudio.sh \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
+    device/mitre/svmp/sshd_config.android:system/etc/ssh/sshd_config \
     $(KERNEL_BIN):kernel
 
 ifeq ($(SVMP_BUILD_TYPE),virtio)
@@ -51,6 +54,9 @@ else
     PRODUCT_COPY_FILES += device/mitre/svmp/fstab.svmp:root/fstab.svmp
 endif
 
+ifdef SVMP_AUTHORIZED_KEYS
+    PRODUCT_COPY_FILES += $(SVMP_AUTHORIZED_KEYS):system/etc/ssh/authorized_keys
+endif
 
 # No need to specify -j for the submake because the parent make process
 # will communicate the information to the child

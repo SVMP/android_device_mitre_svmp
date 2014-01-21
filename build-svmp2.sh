@@ -14,6 +14,14 @@ if [ -z $SVMP_BUILD_TYPE ] ; then
   fi
 fi
 
+AUTHORIZED_KEYS=""
+if [ -z $SVMP_AUTHORIZED_KEYS ] ; then
+    echo "WARNING! SVMP_AUTHORIZED_KEYS is not set, not copying authorized_keys to VM image (SSH access will be unavailable)"
+else
+    echo "SVMP_AUTHORIZED_KEYS is set, copying $SVMP_AUTHORIZED_KEYS to authorized_keys in VM image"
+    AUTHORIZED_KEYS="SVMP_AUTHORIZED_KEYS=$SVMP_AUTHORIZED_KEYS"
+fi
+
 function do_build () {
   echo "Ok. Starting build."
   echo
@@ -21,7 +29,7 @@ function do_build () {
   lunch svmp-eng
   rm $OUT/root/fstab.svmp
   export INIT_BOOTCHART=true
-  m android_system_disk_vdi android_system_disk_vmdk android_data_disk_vdi android_data_disk_vmdk -j$NUM_PROCS $BUILD_TYPE
+  m android_system_disk_vdi android_system_disk_vmdk android_data_disk_vdi android_data_disk_vmdk -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS
 }
 
 do_build
