@@ -72,4 +72,4 @@ PRODUCT_POLICY := android.policy_phone
 PRODUCT_NAME := svmp
 PRODUCT_DEVICE := svmp
 PRODUCT_BRAND := MITRE
-PRODUCT_MODEL := MOCSI SVMP Thin Client VM
+PRODUCT_MODEL := Secure Virtual Mobile Platform v1.2
