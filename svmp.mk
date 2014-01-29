@@ -24,7 +24,6 @@ PRODUCT_PACKAGES += \
 		hwcomposer.default \
 		librtsp_jni \
 		fbset \
-		static_busybox \
 		SVMPProtocol \
 		remote_events \
 		audio.primary.svmp  \
