@@ -84,13 +84,13 @@ extern "C" {
 			return; // already made
 		}
 
-		fd = open("/system/audio_loop", O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+		fd = open("/dev/audio/audio_loop", O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
 		if(fd<0) {
 			ALOGE("Could not open audio loop buffer!");
 			return;
 		}
 			
-		ALOGE("successfully opened audio loop buffer in /system/audio_loop");
+		ALOGE("successfully opened audio loop buffer in /dev/audio/audio_loop");
 	
 
 		// expand file to correct size

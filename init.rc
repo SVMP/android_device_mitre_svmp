@@ -168,6 +168,11 @@ on post-fs
     # create the lost+found directories, so as to enforce our permissions
     mkdir /cache/lost+found 0770 root root
 
+    # SVMP audio
+    mkdir /dev/audio
+    chmod 0771 /dev/audio
+    chown system audio /dev/audio
+
 on post-fs-data
     # We chown/chmod /data again so because mount is run as root + defaults
     chown system system /data
@@ -374,9 +379,6 @@ on property:vold.decrypt=trigger_restart_framework
 on property:vold.decrypt=trigger_shutdown_framework
     class_reset late_start
     class_reset main
-
-service fixaudio /system/bin/fixaudio.sh
-    oneshot 
 
 ## Daemon processes to be run by init.
 ##
