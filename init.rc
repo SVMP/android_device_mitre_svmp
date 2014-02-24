@@ -168,10 +168,10 @@ on post-fs
     # create the lost+found directories, so as to enforce our permissions
     mkdir /cache/lost+found 0770 root root
 
-    # SVMP audio
-    mkdir /dev/audio
-    chmod 0771 /dev/audio
-    chown system audio /dev/audio
+    # SVMP pre-cursor stuff
+    chmod 777 /dev/graphics/fb0
+
+
 
 
 on post-fs-data
@@ -244,6 +244,11 @@ on post-fs-data
     # won't work.
     # Set indication (checked by vold) that we have finished this action
     #setprop vold.post_fs_data_done 1
+
+    # SVMP audio
+    mkdir /dev/audio
+    chmod 0771 /dev/audio
+    chown system audio /dev/audio
 
 on boot
 # basic network init
@@ -351,6 +356,7 @@ on boot
 
     class_start precore
     class_start core
+    start media # explicitly start it
     class_start main
     class_start default
     # start svmp process AFTER 
@@ -449,7 +455,6 @@ service surfaceflinger /system/bin/surfaceflinger
     class main
     user system
     group graphics drmrpc
-    onrestart restart fbperms
     onrestart restart fbset
     onrestart restart zygote
 
@@ -468,10 +473,12 @@ service drm /system/bin/drmserver
     group drm system inet drmrpc
 
 service media /system/bin/mediaserver
-    class svmp  # make sure mediaserver starts later
+    class svmp
     user media
     group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc
     ioprio rt 4
+    disabled
+
 
 service bootanim /system/bin/bootanimation
     class main
