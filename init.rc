@@ -173,6 +173,7 @@ on post-fs
     chmod 0771 /dev/audio
     chown system audio /dev/audio
 
+
 on post-fs-data
     # We chown/chmod /data again so because mount is run as root + defaults
     chown system system /data
@@ -348,6 +349,7 @@ on boot
 # Set this property so surfaceflinger is not started by system_init
     setprop system_init.startsurfaceflinger 0
 
+    class_start precore
     class_start core
     class_start main
     class_start default
@@ -447,6 +449,8 @@ service surfaceflinger /system/bin/surfaceflinger
     class main
     user system
     group graphics drmrpc
+    onrestart restart fbperms
+    onrestart restart fbset
     onrestart restart zygote
 
 service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
@@ -464,7 +468,7 @@ service drm /system/bin/drmserver
     group drm system inet drmrpc
 
 service media /system/bin/mediaserver
-    class main
+    class svmp  # make sure mediaserver starts later
     user media
     group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc
     ioprio rt 4

@@ -35,6 +35,8 @@ on boot
     stop akmd
 
 # start essential services
+    start fbset
+    start fbperms
     start qemud
     start svmp-logcat
     start netcfg
@@ -84,6 +86,7 @@ service qemu-props /system/bin/qemu-props
     oneshot
 
 service qemud /system/bin/qemud
+    class precore
     socket qemud    stream 666
     oneshot
 
@@ -104,12 +107,12 @@ service netcfg /system/bin/netcfg eth0 dhcp
 # FIXME: world readable isn't exactly the ideal solution, do something with groups and permissions instead
 service fbperms /system/bin/logwrapper /system/bin/chmod 777 /dev/graphics/fb0
     oneshot
-    class svmp
+    class precore # start early
 
 # pass in the resolution to be set x,y
 service fbset /system/bin/logwrapper /system/bin/fbset 360 480
     oneshot
-    class svmp
+    class precore # start early
 
 # Start sshd service
 service start-ssh /system/bin/start-ssh
