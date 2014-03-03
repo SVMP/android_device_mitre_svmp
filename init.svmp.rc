@@ -36,7 +36,6 @@ on boot
 
 # start essential services
     start fbset
-    start fbperms
     start qemud
     start svmp-logcat
     start netcfg
@@ -102,12 +101,6 @@ service svmp-logcat /system/bin/logcat -Q
 # Enable networking so that adb can connect
 service netcfg /system/bin/netcfg eth0 dhcp
     oneshot
-
-# change framebuffer device permissions so event server can read from it
-# FIXME: world readable isn't exactly the ideal solution, do something with groups and permissions instead
-service fbperms /system/bin/logwrapper /system/bin/chmod 777 /dev/graphics/fb0
-    oneshot
-    class precore # start early
 
 # pass in the resolution to be set x,y
 service fbset /system/bin/logwrapper /system/bin/fbset 360 480

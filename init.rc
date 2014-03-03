@@ -168,12 +168,6 @@ on post-fs
     # create the lost+found directories, so as to enforce our permissions
     mkdir /cache/lost+found 0770 root root
 
-    # SVMP pre-cursor stuff
-    chmod 777 /dev/graphics/fb0
-
-
-
-
 on post-fs-data
     # We chown/chmod /data again so because mount is run as root + defaults
     chown system system /data
@@ -461,7 +455,7 @@ service surfaceflinger /system/bin/surfaceflinger
 service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
     class main
     socket zygote stream 660 root system
-	socket svmp_sensors stream 660 root net_admin
+    socket svmp_sensors stream 660 root net_admin
     onrestart write /sys/android_power/request_state wake
     onrestart write /sys/power/state on
     onrestart restart media
