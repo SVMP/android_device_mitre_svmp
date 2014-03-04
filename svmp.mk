@@ -66,6 +66,10 @@ $(KERNEL_BIN): build_kernel
 
 $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
 
+ifdef SVMP_DEV_CERTIFICATE
+    PRODUCT_DEFAULT_DEV_CERTIFICATE := $(SVMP_DEV_CERTIFICATE)
+endif
+
 PRODUCT_POLICY := android.policy_phone
 
 PRODUCT_NAME := svmp
