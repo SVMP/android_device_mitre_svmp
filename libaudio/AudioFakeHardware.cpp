@@ -50,6 +50,8 @@ limitations under the License.
 
 // MOCSI - MITRE 2012
 // Dylan Ladwig <dladwig@mitre.org>, <dylan.ladwig@gmail.com>
+// Updates Feb. 2014
+
 
 #define LOG_TAG "LibMOCSIAudio"
 
@@ -77,6 +79,10 @@ extern "C" {
 	int fd=-1;
 	unsigned short *position;
 	unsigned short *data;
+
+	int infd=-1;
+	unsigned short *inposition;
+	unsigned short *indata;
 
 	void setupBuffer() {
 		if(fd>0) {
@@ -107,6 +113,45 @@ extern "C" {
 		data = position+sizeof(unsigned short);
 	}
 
+	void setupInBuffer() {
+			if(infd>0) {
+				ALOGW("Tried to open buffer twice!");
+				return; // already made
+			}
+
+			infd = open("/dev/audio/audio_loop", O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+			if(infd<0) {
+				ALOGE("Could not open audio loop buffer!");
+				return;
+			}
+
+			ALOGE("successfully opened audio loop buffer in /dev/audio/audio_loop");
+
+
+			// expand file to correct size
+			lseek(infd, sizeof(unsigned short)*(BUFFER_SIZE+1)-1, SEEK_SET);
+			write(infd, " ", 1);
+
+			// mmap
+			inposition = (unsigned short*) mmap(NULL, sizeof(unsigned short)*(BUFFER_SIZE+1), PROT_READ|PROT_WRITE, MAP_SHARED, infd, 0);
+			if(!inposition)
+				ALOGE("Could not MMAP audio loop buffer!");
+
+			ALOGI("Opened audio loop successfully.");
+
+			indata = inposition+sizeof(unsigned short);
+		}
+
+
+	void readFromBuffer(int length, unsigned short *out) {
+
+		int pos = *inposition, i;
+		for (i=0; i< length; i++, pos = (pos+1)%BUFFER_SIZE){
+			out[i]=indata[pos];
+		}
+		*inposition = pos;
+	}
+
 	void writeToBuffer(int length, unsigned short *in) {
 		if(fd<0||!position)
 			return;
@@ -118,6 +163,7 @@ extern "C" {
 		}
 		*position=pos;
 	}
+
 }
 
 AudioFakeHardware::AudioFakeHardware() : mMicMute(false)
@@ -159,12 +205,23 @@ AudioStreamIn* AudioFakeHardware::openInputStream(
         uint32_t devices, int *format, uint32_t *channels, uint32_t *sampleRate,
         status_t *status, AudioSystem::audio_in_acoustics acoustics)
 {
-    return NULL;	// No audio inputs here.
+	AudioAACStreamIn* in = new AudioAACStreamIn();
+	status_t lStatus = in->set(format, channels, sampleRate);
+
+	if (status) {
+		*status = lStatus;
+	}
+	if (lStatus == NO_ERROR) {
+		//ALOGI("Makin' an output...");
+		return in;
+	}
+	delete in;
+	return 0;
 }
 
 void AudioFakeHardware::closeInputStream(AudioStreamIn* in)
 {
-    // do nothing
+	delete in;
 }
 
 status_t AudioFakeHardware::setVoiceVolume(float volume)
@@ -206,6 +263,48 @@ status_t AudioAACStreamOut::set(int *pFormat, uint32_t *pChannels, uint32_t *pRa
     return NO_ERROR;
 }
 
+status_t AudioAACStreamIn::set(int *pFormat, uint32_t *pChannels, uint32_t *pRate)
+{
+    if (pFormat) *pFormat = format();
+    if (pChannels) *pChannels = channels();
+    if (pRate) *pRate = sampleRate();
+
+    return NO_ERROR;
+}
+
+unsigned int  AudioAACStreamIn::getInputFramesLost() const
+{
+	return 0;
+}
+
+ssize_t AudioAACStreamIn::read(void* buffer, ssize_t bytes)
+{
+	struct timeval end;
+	gettimeofday(&end, NULL);
+	int diff = end.tv_usec-last.tv_usec+1000000ll*(end.tv_sec-last.tv_sec);
+	if(diff>250000||diff<0)	{ // 1/4sec
+		ALOGI("Resetting time; had %d diff\n", diff);
+		gettimeofday(&last, NULL);
+	}
+	readFromBuffer(bytes/sizeof(unsigned short),(unsigned short*)buffer);	// bytes/2 is because I care about shorts, not bytes
+
+	// advance the time time by a frame
+	last.tv_usec += (bytes * 1000000ll) / sizeof(int16_t) / AudioSystem::popCount(channels()) / sampleRate();
+	if(last.tv_usec>1000000ll) {
+		last.tv_sec++;
+		last.tv_usec-=1000000;
+	}
+
+	diff = last.tv_usec-end.tv_usec+1000000ll*(last.tv_sec-end.tv_sec);
+
+	if(diff>0)	// If it's positive, sleep the difference between the expected end time and the actual end time
+		usleep(diff);
+
+	return bytes;
+
+}
+
+
 ssize_t AudioAACStreamOut::write(const void* buffer, size_t bytes)
 {
 	struct timeval end;
@@ -235,6 +334,7 @@ ssize_t AudioAACStreamOut::write(const void* buffer, size_t bytes)
 
     return bytes;
 }
+
 
 status_t AudioAACStreamOut::standby()
 {
@@ -267,6 +367,8 @@ status_t AudioAACStreamOut::getRenderPosition(uint32_t *dspFrames)
     return INVALID_OPERATION;
 }
 
+
+
 //------------------------------------------------------------------------------
 //  Factory
 //------------------------------------------------------------------------------
@@ -274,6 +376,7 @@ status_t AudioAACStreamOut::getRenderPosition(uint32_t *dspFrames)
 extern "C" AudioHardwareInterface* createAudioHardware(void) {
 	ALOGI("Creating Audio Hardware");
 	setupBuffer();
+	setupInBuffer(); // fake microphone
     return new AudioFakeHardware();
 }
 

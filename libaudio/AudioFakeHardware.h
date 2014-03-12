@@ -44,6 +44,25 @@ namespace android_audio_legacy {
 
 // ----------------------------------------------------------------------------
 
+class AudioAACStreamIn : public AudioStreamIn {
+public:
+	virtual status_t    set(int *pFormat, uint32_t *pChannels, uint32_t *pRate);
+	virtual uint32_t    sampleRate() const { return 44100; }
+	virtual size_t      bufferSize() const { return 4096; }
+	virtual uint32_t    channels() const { return AudioSystem::CHANNEL_IN_STEREO; }
+	virtual int         format() const { return AudioSystem::PCM_16_BIT; }
+	virtual ssize_t     read(void* buffer, ssize_t bytes);
+	virtual status_t    dump(int fd, const Vector<String16>& args){return NO_ERROR;}
+	virtual status_t    standby(){return NO_ERROR;}
+	virtual status_t    setParameters(const String8& keyValuePairs) { return NO_ERROR;}
+	virtual String8     getParameters(const String8& keys){return keys;}
+	virtual status_t    setGain(float gain) { return NO_ERROR; }
+	virtual status_t addAudioEffect(effect_handle_t effect){ return NO_ERROR;}
+	virtual status_t removeAudioEffect(effect_handle_t effect){ return NO_ERROR;}
+	unsigned int  getInputFramesLost() const;
+private:
+	struct timeval last;
+};
 class AudioAACStreamOut : public AudioStreamOut {
 public:
     virtual status_t    set(int *pFormat, uint32_t *pChannels, uint32_t *pRate);
