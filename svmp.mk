@@ -31,6 +31,7 @@ PRODUCT_PACKAGES += \
 		libremote_events_jni \
 		libjingle_peerconnection_so.so \
 		scp sftp sshd ssh-keygen start-ssh \
+		e2fsck \
 		Email
 
 PRODUCT_COPY_FILES += \
@@ -75,4 +76,4 @@ PRODUCT_POLICY := android.policy_phone
 PRODUCT_NAME := svmp
 PRODUCT_DEVICE := svmp
 PRODUCT_BRAND := MITRE
-PRODUCT_MODEL := Secure Virtual Mobile Platform v1.3
+PRODUCT_MODEL := Secure Virtual Mobile Platform v1.3.1
