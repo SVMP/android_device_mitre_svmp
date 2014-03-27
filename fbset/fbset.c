@@ -31,7 +31,7 @@ limitations under the License.
 #define FBPATH "/dev/graphics/fb0"
 
 void usage() {
-	printf ("usage: fbset X Y : i.e. fbset 720 1184");
+	printf ("usage: fbset X-res Y-res fps: i.e. fbset 720 1184 130000");
 	exit(EXIT_SUCCESS);
 }
 
@@ -39,10 +39,10 @@ int main(int argc, char** argv) {
 	int fd; 	
 	struct fb_var_screeninfo var;
 	struct fb_fix_screeninfo fix;
+        float fps;
 
-	if(argc < 2)
+	if (argc < 3) 
 		usage();
-
 
 	fd = open(FBPATH, O_RDWR);
 
@@ -51,8 +51,6 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	if (argc < 3) 
-		usage();
 
 	if(ioctl(fd, FBIOGET_VSCREENINFO, &var)) {
 		perror("Could not get variable screen info");
@@ -71,7 +69,7 @@ int main(int argc, char** argv) {
 	// original setting
 	// 1280 x 768
 	var.xres = atoi(argv[1]);
-	var.yres = atoi(argv[2]);
+	var.yres = atof(argv[2]);
 	// new setting 360X480
 	//var.xres = 480;
 	//var.yres = 800;
@@ -93,7 +91,8 @@ int main(int argc, char** argv) {
 
 	var.yoffset = var.yres;
 
-	var.pixclock = 130000;
+        fps = atoi(argv[3]);
+        var.pixclock = (int) ((( 1000000000.0 / fps) - 9000000.0) / 184.85);
 
 	var.bits_per_pixel=16;
 	var.grayscale=0;

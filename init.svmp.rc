@@ -103,7 +103,7 @@ service netcfg /system/bin/netcfg eth0 dhcp
     oneshot
 
 # pass in the resolution to be set x,y
-service fbset /system/bin/logwrapper /system/bin/fbset 360 480
+service fbset /system/bin/logwrapper /system/bin/fbset 360 480 20.0
     oneshot
     class precore # start early
 
