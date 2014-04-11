@@ -7,6 +7,9 @@ lockscreen.disabled=yes
 
 qemu.hw.mainkeys=0
 
+# Forces Launcher to allow rotating when orientation changes
+log.tag.launcher_force_rotate=VERBOSE
+
 # Headless and wifi display mode stuff
 
 # seems to help a tiny bit, but still yields lots of "Timed out waiting for hw vsync; faking it"
