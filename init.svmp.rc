@@ -39,6 +39,7 @@ on boot
     start qemud
     start svmp-logcat
     start netcfg
+    start print-net
 
     setprop ro.setupwizard.mode EMULATOR
 
@@ -100,6 +101,10 @@ service svmp-logcat /system/bin/logcat -Q
 
 # Enable networking so that adb can connect
 service netcfg /system/bin/netcfg eth0 dhcp
+    oneshot
+
+# Print the network info to the dmesg console
+service print-net /system/bin/print-netcfg
     oneshot
 
 # pass in the resolution to be set x,y

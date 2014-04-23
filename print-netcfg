@@ -1,0 +1,13 @@
+#!/system/bin/sh
+
+sleep 5
+
+/system/bin/netcfg | while read line
+do
+  echo "netcfg: $line" > /dev/kmsg
+done
+
+/system/bin/ip route | while read line
+do
+  echo "ip route: $line" > /dev/kmsg
+done

@@ -45,6 +45,7 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
     device/mitre/svmp/sshd_config.android:system/etc/ssh/sshd_config \
+    device/mitre/svmp/print-netcfg:system/bin/print-netcfg \
     $(KERNEL_BIN):kernel
 
 ifeq ($(SVMP_BUILD_TYPE),virtio)
