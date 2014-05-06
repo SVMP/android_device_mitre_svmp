@@ -12,9 +12,15 @@ DEVICE_PACKAGE_OVERLAYS := device/mitre/svmp/overlay
 
 LOCAL_PATH := $(call my-dir)
 
+# 32-bit android kernel
 KERNEL_SRC := kernel/android-3.4
 KERNEL_BIN := $(KERNEL_SRC)/arch/x86/boot/bzImage
 SVMP_KERN_CONFIG := device/mitre/svmp/svmp-kernel.config
+
+# New Intel 64-bit android kernel
+# remove "ARCH=x86" from the kernel build line below if this is used
+#KERNEL_SRC := kernel/intel
+#SVMP_KERN_CONFIG := device/mitre/svmp/svmp-kernel.config.intel-4.2.2
 
 PRODUCT_PROPERTY_OVERRIDES := \
     ro.ril.hsxpa=1 \
@@ -60,6 +66,7 @@ endif
 
 # No need to specify -j for the submake because the parent make process
 # will communicate the information to the child
+# If building a 64-bit kernel, remove ARCH=x86 from the make line
 .PHONY: build_kernel
 build_kernel:
 	cp $(SVMP_KERN_CONFIG) $(KERNEL_SRC)/.config
