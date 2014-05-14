@@ -115,3 +115,7 @@ service fbset /system/bin/logwrapper /system/bin/fbset 360 480 20.0
 # Start sshd service
 service start-ssh /system/bin/start-ssh
     oneshot
+
+# Check if /data device mounted correctly
+service check-data-dev /system/bin/remount.sh
+    oneshot
