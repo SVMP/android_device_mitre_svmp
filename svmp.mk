@@ -85,4 +85,4 @@ PRODUCT_POLICY := android.policy_phone
 PRODUCT_NAME := svmp
 PRODUCT_DEVICE := svmp
 PRODUCT_BRAND := MITRE
-PRODUCT_MODEL := Secure Virtual Mobile Platform v1.3.1
+PRODUCT_MODEL := Secure Virtual Mobile Platform v1.4.0
