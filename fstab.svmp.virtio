@@ -3,6 +3,6 @@
 # The filesystem that contains the filesystem checker binary (typically /system) cannot
 # specify MF_CHECK, and must come before any filesystems that do specify MF_CHECK
 
-/dev/block/vda6			/system		ext4	ro					wait
+/dev/block/vda3			/system		ext4	ro					wait
+/dev/block/vda4			/cache		ext4	noatime,nosuid,nodev,nomblk_io_submit,errors=panic	wait,check
 /dev/block/vdb1			/data		ext4	noatime,nosuid,nodev,nomblk_io_submit,errors=panic	wait,check
-/dev/block/vdb2			/cache		ext4	noatime,nosuid,nodev,nomblk_io_submit,errors=panic	wait,check

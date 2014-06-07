@@ -34,7 +34,11 @@ function do_build () {
   lunch svmp-eng
   rm -f $OUT/root/fstab.svmp
   export INIT_BOOTCHART=true
-  m android_system_disk_vdi android_system_disk_vmdk android_data_disk_vdi android_data_disk_vmdk -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS
+  make svmp_system_disk svmp_data_disk \
+    svmp_system_disk_vmdk  svmp_data_disk_vmdk \
+    svmp_system_disk_vdi   svmp_data_disk_vdi \
+    svmp_system_disk_qcow2 svmp_data_disk_qcow2 \
+    -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS
 }
 
 # This function sets the SVMP_DEV_CERTIFICATE variable used in svmp.mk
