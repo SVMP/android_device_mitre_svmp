@@ -55,11 +55,18 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/remount/remount.sh:system/bin/remount.sh \
     $(KERNEL_BIN):kernel
 
-ifeq ($(SVMP_BUILD_TYPE),virtio)
-    PRODUCT_COPY_FILES += device/mitre/svmp/fstab.svmp.virtio:root/fstab.svmp
-else
-    PRODUCT_COPY_FILES += device/mitre/svmp/fstab.svmp:root/fstab.svmp
+FSTAB_FILE := device/mitre/svmp/fstab.svmp
+
+ifeq ($(SVMP_AIO_IMAGE),yes)
+    FSTAB_FILE := $(addsuffix .aio,$(FSTAB_FILE))
 endif
+
+ifeq ($(SVMP_BUILD_TYPE),virtio)
+    FSTAB_FILE := $(addsuffix .virtio,$(FSTAB_FILE))
+endif
+
+PRODUCT_COPY_FILES += $(FSTAB_FILE):root/fstab.svmp
+
 
 ifdef SVMP_AUTHORIZED_KEYS
     PRODUCT_COPY_FILES += $(SVMP_AUTHORIZED_KEYS):system/etc/ssh/authorized_keys

@@ -18,6 +18,18 @@ fi
 
 echo
 
+BUILD_AIO="SVMP_AIO_IMAGE=$SVMP_AIO_IMAGE"
+if [ -z $SVMP_AIO_IMAGE ] ; then
+  read -p "Create a single all-in-one disk image? (/system and /data combined): [y/N]" -n 1 -r
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    SVMP_AIO_IMAGE=true
+    BUILD_AIO="$BUILD_TYPE SVMP_AIO_IMAGE=yes"
+  fi
+fi
+
+echo
+
 AUTHORIZED_KEYS=""
 if [ -z $SVMP_AUTHORIZED_KEYS ] ; then
     echo "WARNING! SVMP_AUTHORIZED_KEYS is not set, not copying authorized_keys to VM image (SSH access will be unavailable)"
@@ -34,11 +46,19 @@ function do_build () {
   lunch svmp-eng
   rm -f $OUT/root/fstab.svmp
   export INIT_BOOTCHART=true
-  make svmp_system_disk svmp_data_disk \
-    svmp_system_disk_vmdk  svmp_data_disk_vmdk \
-    svmp_system_disk_vdi   svmp_data_disk_vdi \
-    svmp_system_disk_qcow2 svmp_data_disk_qcow2 \
-    -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS
+  if [ $SVMP_AIO_IMAGE ] ; then
+    make svmp_aio_disk \
+      svmp_aio_disk_vmdk \
+      svmp_aio_disk_vdi \
+      svmp_aio_disk_qcow2 \
+      -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS $BUILD_AIO
+  else
+    make svmp_system_disk svmp_data_disk \
+      svmp_system_disk_vmdk  svmp_data_disk_vmdk \
+      svmp_system_disk_vdi   svmp_data_disk_vdi \
+      svmp_system_disk_qcow2 svmp_data_disk_qcow2 \
+      -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS $BUILD_AIO
+  fi
 }
 
 # This function sets the SVMP_DEV_CERTIFICATE variable used in svmp.mk
