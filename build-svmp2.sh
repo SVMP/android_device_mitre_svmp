@@ -4,6 +4,7 @@
 #    SVMP_BUILD_TYPE
 #    SVMP_DISK_TYPE
 #    SVMP_AIO_BUILD
+#    SVMP_ENABLE_SSH
 #    SVMP_SSH_AUTHORIZED_KEYS 
 #    SVMP_USE_CUSTOM_KEYS
 #    SVMP_CERT_INFO
@@ -131,10 +132,19 @@ fi
 # Add SSH keys?
 ########################################################################
 
-if [ -z $SVMP_SSH_AUTHORIZED_KEYS ] ; then
+if [ -z $SVMP_ENABLE_SSH ] ; then 
     if whiptail --yesno --title "SSH" --defaultno \
                 "Enable sshd within the Android VM?" 8 $WT_WIDTH
     then
+        SVMP_ENABLE_SSH=yes
+    else
+        SVMP_ENABLE_SSH=no
+    fi
+    SHOW_SAVE_DIALOG=yes
+fi
+
+if [ "$SVMP_ENABLE_SSH" == "yes" ] ; then
+    if [ -z $SVMP_SSH_AUTHORIZED_KEYS ] ; then
         # ask for the authorized keys file path
         SVMP_SSH_AUTHORIZED_KEYS=$(whiptail --inputbox --title "SSH" \
             "Enter the FULL path to the SSH authorized keys file to embed:" \
@@ -143,8 +153,8 @@ if [ -z $SVMP_SSH_AUTHORIZED_KEYS ] ; then
             echo "ERROR! Cannot read the authorized_keys file \"$SVMP_SSH_AUTHORIZED_KEYS\""
             exit
         fi
+        SHOW_SAVE_DIALOG=yes
     fi
-    SHOW_SAVE_DIALOG=yes
 fi
 
 
@@ -190,6 +200,7 @@ The following settings will be saved to $CONFIG_FILE:
     SVMP_BUILD_TYPE = \"$SVMP_BUILD_TYPE\"
     SVMP_DISK_TYPE = \"$SVMP_DISK_TYPE\"
     SVMP_AIO_BUILD = \"$SVMP_AIO_BUILD\"
+    SVMP_ENABLE_SSH = \"$SVMP_ENABLE_SSH\"
     SVMP_SSH_AUTHORIZED_KEYS = \"$SVMP_SSH_AUTHORIZED_KEYS\"
     SVMP_USE_CUSTOM_KEYS = \"$SVMP_USE_CUSTOM_KEYS\"
     SVMP_CERT_INFO = \"$SVMP_CERT_INFO\"
@@ -203,6 +214,7 @@ if [ $SHOW_SAVE_DIALOG == "yes" ] ; then
         echo "SVMP_BUILD_TYPE=\"$SVMP_BUILD_TYPE\"" > $CONFIG_FILE
         echo "SVMP_DISK_TYPE=\"$SVMP_DISK_TYPE\"" >> $CONFIG_FILE
         echo "SVMP_AIO_BUILD=\"$SVMP_AIO_BUILD\"" >> $CONFIG_FILE
+        echo "SVMP_ENABLE_SSH=\"$SVMP_ENABLE_SSH\"" >> $CONFIG_FILE
         echo "SVMP_SSH_AUTHORIZED_KEYS=\"$SVMP_SSH_AUTHORIZED_KEYS\"" >> $CONFIG_FILE
         echo "SVMP_USE_CUSTOM_KEYS=\"$SVMP_USE_CUSTOM_KEYS\"" >> $CONFIG_FILE
         echo "SVMP_CERT_INFO=\"$SVMP_CERT_INFO\"" >> $CONFIG_FILE
@@ -278,7 +290,7 @@ function do_build () {
   if [ "$SVMP_AIO_BUILD" == "yes" ] ; then
       MAKE_OPTS="$MAKE_OPTS SVMP_AIO_BUILD=$SVMP_AIO_BUILD"
   fi
-  if [ -r $SVMP_SSH_AUTHORIZED_KEYS ] ; then
+  if [ "$SVMP_ENABLE_SSH" == "yes" ] ; then
       MAKE_OPTS="$MAKE_OPTS SVMP_AUTHORIZED_KEYS=$SVMP_SSH_AUTHORIZED_KEYS"
   fi
   if [ $SVMP_DEV_CERTIFICATE ] ; then
