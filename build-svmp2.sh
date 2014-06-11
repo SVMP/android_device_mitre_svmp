@@ -1,64 +1,296 @@
 #!/bin/bash
 
+# List of environment variables:
+#    SVMP_BUILD_TYPE
+#    SVMP_DISK_TYPE
+#    SVMP_AIO_BUILD
+#    SVMP_SSH_AUTHORIZED_KEYS 
+#    SVMP_USE_CUSTOM_KEYS
+#    SVMP_CERT_INFO
+
 NUM_PROCS=`grep -c ^processor /proc/cpuinfo`
 NUM_PROCS=$(($NUM_PROCS + $NUM_PROCS / 2))
 
-#CERT_INFO="/C=US/ST=VIRGINIA/L=McLean/O=MITRE Corporation/CN=SVMP/emailAddress=svmp@mitre.org"
+WT_HEIGHT=20
+WT_WIDTH=72
 
-echo "Building SVMP"
+CONFIG_FILE=`pwd`/.svmp.config
+SHOW_SAVE_DIALOG=no
 
-BUILD_TYPE="SVMP_BUILD_TYPE=$SVMP_BUILD_TYPE"
+if [ -r $CONFIG_FILE ] ; then
+    source $CONFIG_FILE
+fi
+
+########################################################################
+# Intro
+########################################################################
+
+_MESSAGE="Welcome to the SVMP build script.
+
+You will be asked to choose several configuration options before the build begins.
+
+Press 'Cancel' at any time to quit the build."
+
+if [ ! -r $CONFIG_FILE ] ; then
+    whiptail --yesno "$_MESSAGE" $WT_HEIGHT $WT_WIDTH \
+         --title "Welcome" \
+         --yes-button "Continue" \
+         --no-button "Cancel" || exit
+fi
+
+########################################################################
+# What type of disk image, container, or VM appliance to build?
+########################################################################
+
+function not-yet-implemented() {
+    whiptail --msgbox --title "Error" \
+             "Sorry, the $1 target is not yet implemented." 8 $WT_WIDTH
+    exit
+}
+
 if [ -z $SVMP_BUILD_TYPE ] ; then
-  read -p "Build VM to use virtio block devices? (e.g., for qemu-kvm): [y/N]" -n 1 -r
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
-    BUILD_TYPE='SVMP_BUILD_TYPE=virtio'
-  fi
+    SVMP_BUILD_TYPE=$(whiptail --radiolist --title "Images to Build" \
+        "Choose the image target to build:" $WT_HEIGHT $WT_WIDTH 10 \
+        raw        "  Raw disk image with no container format" on \
+        vdi        "  Raw disk image in VDI format" off \
+        vmdk       "  Raw disk image in VMDK format" off \
+        qcow2      "  Raw disk image in QCOW2 format" off \
+        ovf-vbox   "  OVF appliance for VirtualBox (TODO)" off \
+        ovf-vmware "  OVF appliance for VMware (TODO)" off \
+        ovf-xen    "  OVF appliance for XenServer (TODO)" off \
+        kvm        "  QEMU-KVM libvirt appliance (TODO)" off \
+        aws-ami    "  Amazon Web Services AMI (TODO)" off 3>&1 1>&2 2>&3 ) || exit
+    SHOW_SAVE_DIALOG=yes
 fi
 
-echo
+# Some of these will dictate a particular disk controller type
+case $SVMP_BUILD_TYPE in
+ovf-vbox)
+  SVMP_DISK_TYPE=sdx
+  not-yet-implemented "VirtualBox OVF"
+  ;;
+ovf-vmware)
+  SVMP_DISK_TYPE=sdx
+  not-yet-implemented "VMware OVF"
+  ;;
+ovf-xen)
+  SVMP_DISK_TYPE=xdx
+  not-yet-implemented "XenServer OVF"
+  ;;
+kvm)
+  SVMP_DISK_TYPE=vdx
+  not-yet-implemented "KVM libvirt"
+  ;;
+aws-ami)
+  SVMP_DISK_TYPE=xdx
+  not-yet-implemented "AWS"
+  ;;
+*)
+  # One of the raw types. We'll need to ask for a disk type.
+  SVMP_DISK_TYPE=${SVMP_DISK_TYPE:-}
+  ;;
+esac
 
-BUILD_AIO="SVMP_AIO_IMAGE=$SVMP_AIO_IMAGE"
-if [ -z $SVMP_AIO_IMAGE ] ; then
-  read -p "Create a single all-in-one disk image? (/system and /data combined): [y/N]" -n 1 -r
-  if [[ $REPLY =~ ^[Yy]$ ]]
-  then
-    SVMP_AIO_IMAGE=true
-    BUILD_AIO="$BUILD_TYPE SVMP_AIO_IMAGE=yes"
-  fi
+########################################################################
+# What disk controller type should fstab expect?
+########################################################################
+
+if [ -z $SVMP_DISK_TYPE ] ; then
+    SVMP_DISK_TYPE=$(whiptail --menu --title "Drive Type" \
+        "Choose the virtual hard drive type to use to configure fstab:" $WT_HEIGHT $WT_WIDTH 4 \
+        sdx "    /dev/sdX - SATA / SCSI" \
+        hdx "    /dev/hdX - IDE" \
+        vdx "    /dev/vdX - QEMU / KVM Virtio" \
+        xdx "    /dev/xdX - Xen (also AWS & Rackspace)" 3>&1 1>&2 2>&3 ) || exit
+    SHOW_SAVE_DIALOG=yes
 fi
 
-echo
+########################################################################
+# Make an all-in-one image or separate system and data disks?
+########################################################################
 
-AUTHORIZED_KEYS=""
-if [ -z $SVMP_AUTHORIZED_KEYS ] ; then
-    echo "WARNING! SVMP_AUTHORIZED_KEYS is not set, not copying authorized_keys to VM image (SSH access will be unavailable)"
-else
-    echo "SVMP_AUTHORIZED_KEYS is set, copying $SVMP_AUTHORIZED_KEYS to authorized_keys in VM image"
-    AUTHORIZED_KEYS="SVMP_AUTHORIZED_KEYS=$SVMP_AUTHORIZED_KEYS"
+_MESSAGE="Would you like to build an \"all-in-one\" image?
+
+By default, separate system and data disks are created.
+
+Optionally, an all-in-one image can be made combining /system and /data into a single disk."
+
+if [ -z $SVMP_AIO_BUILD ] ; then
+    if whiptail --yesno --title "All-in-one image" --defaultno \
+                --yes-button "All-in-one" --no-button "Separate" \
+                "$_MESSAGE" $WT_HEIGHT $WT_WIDTH
+    then
+        SVMP_AIO_BUILD=yes
+    else
+        SVMP_AIO_BUILD=no
+    fi
+    SHOW_SAVE_DIALOG=yes
 fi
+
+########################################################################
+# Add SSH keys?
+########################################################################
+
+if [ -z $SVMP_SSH_AUTHORIZED_KEYS ] ; then
+    if whiptail --yesno --title "SSH" --defaultno \
+                "Enable sshd within the Android VM?" 8 $WT_WIDTH
+    then
+        # ask for the authorized keys file path
+        SVMP_SSH_AUTHORIZED_KEYS=$(whiptail --inputbox --title "SSH" \
+            "Enter the FULL path to the SSH authorized keys file to embed:" \
+            8 $WT_WIDTH 3>&1 1>&2 2>&3 )
+        if [ ! -r $SVMP_SSH_AUTHORIZED_KEYS ] ; then
+            echo "ERROR! Cannot read the authorized_keys file \"$SVMP_SSH_AUTHORIZED_KEYS\""
+            exit
+        fi
+    fi
+    SHOW_SAVE_DIALOG=yes
+fi
+
+
+########################################################################
+# Use custom signing keys for the ROM?
+########################################################################
+
+if [ -z $SVMP_USE_CUSTOM_KEYS ] ; then
+    if whiptail --yesno --title "Signing Keys" --defaultno \
+                "Use custom keys to sign the SVMP ROM image?" 8 $WT_WIDTH
+    then
+        SVMP_USE_CUSTOM_KEYS=yes
+    else
+        SVMP_USE_CUSTOM_KEYS=no
+    fi
+    SHOW_SAVE_DIALOG=yes
+fi
+
+_MESSAGE="Enter the certificate info string:
+
+Example:
+\"/C=US/ST=State/L=City/O=Corp Name/CN=SVMP/emailAddress=svmp@test.com\""
+
+if [ "$SVMP_USE_CUSTOM_KEYS" == "yes" ] ; then
+    # get the certificate info string for generation
+    if [ -z "$SVMP_CERT_INFO" ] ; then
+     
+        # ask for the authorized keys file path
+        SVMP_CERT_INFO=$(whiptail --inputbox --title "Signing Keys" \
+            "$_MESSAGE" 12 80 3>&1 1>&2 2>&3 )
+        SHOW_SAVE_DIALOG=yes
+    fi
+fi
+
+########################################################################
+# Offer to save the settings to environment variables for next time
+# (and/or a config file)
+########################################################################
+
+_MESSAGE="Would you like to save these settings for later?
+
+The following settings will be saved to $CONFIG_FILE:
+    SVMP_BUILD_TYPE = \"$SVMP_BUILD_TYPE\"
+    SVMP_DISK_TYPE = \"$SVMP_DISK_TYPE\"
+    SVMP_AIO_BUILD = \"$SVMP_AIO_BUILD\"
+    SVMP_SSH_AUTHORIZED_KEYS = \"$SVMP_SSH_AUTHORIZED_KEYS\"
+    SVMP_USE_CUSTOM_KEYS = \"$SVMP_USE_CUSTOM_KEYS\"
+    SVMP_CERT_INFO = \"$SVMP_CERT_INFO\"
+
+Delete the config file to re-enable the configuration menus."
+
+if [ $SHOW_SAVE_DIALOG == "yes" ] ; then
+    if whiptail --yesno --title "Save Settings" --defaultno \
+             "$_MESSAGE" 20 $WT_WIDTH
+    then
+        echo "SVMP_BUILD_TYPE=\"$SVMP_BUILD_TYPE\"" > $CONFIG_FILE
+        echo "SVMP_DISK_TYPE=\"$SVMP_DISK_TYPE\"" >> $CONFIG_FILE
+        echo "SVMP_AIO_BUILD=\"$SVMP_AIO_BUILD\"" >> $CONFIG_FILE
+        echo "SVMP_SSH_AUTHORIZED_KEYS=\"$SVMP_SSH_AUTHORIZED_KEYS\"" >> $CONFIG_FILE
+        echo "SVMP_USE_CUSTOM_KEYS=\"$SVMP_USE_CUSTOM_KEYS\"" >> $CONFIG_FILE
+        echo "SVMP_CERT_INFO=\"$SVMP_CERT_INFO\"" >> $CONFIG_FILE
+    fi
+fi
+
+########################################################################
+# Done with user input. Starting the build.
+########################################################################
+
+_MESSAGE="Starting the build."
+
+if [ ! -r $CONFIG_FILE ] ; then
+    whiptail --yesno "$_MESSAGE" $WT_HEIGHT $WT_WIDTH \
+         --title "Building" \
+         --yes-button "Continue" \
+         --no-button "Cancel" || exit
+fi
+
+########################################################################
+# Done with user input.
+########################################################################
 
 function do_build () {
   echo
   echo "Starting build."
   echo
+
+  if [ "$SVMP_AIO_BUILD" == "yes" ] ; then
+      MAKE_SYSTEM_TARGET="svmp_aio_disk"
+      MAKE_DATA_TARGET=
+  else
+      MAKE_SYSTEM_TARGET="svmp_system_disk"
+      MAKE_DATA_TARGET="svmp_data_disk"
+  fi
+
+  case $SVMP_BUILD_TYPE in
+  raw)
+      TGT_SUFFIX=""
+      ;;
+  vdi)
+      TGT_SUFFIX="_vdi"
+      ;;
+  vmdk)
+      TGT_SUFFIX="_vmdk"
+      ;;
+  qcow2)
+      TGT_SUFFIX="_qcow2"
+      ;;
+  ovf-vbox)
+      TGT_SUFFIX="_vmdk"
+      ;;
+  ovf-vmware)
+      TGT_SUFFIX="_vmdk"
+      ;;
+  ovf-xen)
+      TGT_SUFFIX="_vmdk"
+      ;;
+  kvm)
+      TGT_SUFFIX="_qcow2"
+      ;;
+  aws-ami)
+      TGT_SUFFIX=""
+      ;;
+  esac
+
+  MAKE_SYSTEM_TARGET="${MAKE_SYSTEM_TARGET}${TGT_SUFFIX}"
+  if [ $MAKE_DATA_TARGET ] ; then
+      MAKE_DATA_TARGET="${MAKE_DATA_TARGET}${TGT_SUFFIX}"
+  fi
+
+  MAKE_OPTS="SVMP_DISK_TYPE=$SVMP_DISK_TYPE"
+  if [ "$SVMP_AIO_BUILD" == "yes" ] ; then
+      MAKE_OPTS="$MAKE_OPTS SVMP_AIO_BUILD=$SVMP_AIO_BUILD"
+  fi
+  if [ -r $SVMP_SSH_AUTHORIZED_KEYS ] ; then
+      MAKE_OPTS="$MAKE_OPTS SVMP_AUTHORIZED_KEYS=$SVMP_SSH_AUTHORIZED_KEYS"
+  fi
+  if [ $SVMP_DEV_CERTIFICATE ] ; then
+      MAKE_OPTS="$MAKE_OPTS SVMP_DEV_CERTIFICATE=\"$SVMP_DEV_CERTIFICATE\""
+  fi
+
   . build/envsetup.sh
   lunch svmp-eng
   rm -f $OUT/root/fstab.svmp
   export INIT_BOOTCHART=true
-  if [ $SVMP_AIO_IMAGE ] ; then
-    make svmp_aio_disk \
-      svmp_aio_disk_vmdk \
-      svmp_aio_disk_vdi \
-      svmp_aio_disk_qcow2 \
-      -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS $BUILD_AIO
-  else
-    make svmp_system_disk svmp_data_disk \
-      svmp_system_disk_vmdk  svmp_data_disk_vmdk \
-      svmp_system_disk_vdi   svmp_data_disk_vdi \
-      svmp_system_disk_qcow2 svmp_data_disk_qcow2 \
-      -j$NUM_PROCS $BUILD_TYPE $AUTHORIZED_KEYS $BUILD_AIO
-  fi
+  echo make $MAKE_SYSTEM_TARGET $MAKE_DATA_TARGET $MAKE_OPTS -j$NUM_PROCS
+  make $MAKE_SYSTEM_TARGET $MAKE_DATA_TARGET $MAKE_OPTS -j$NUM_PROCS
 }
 
 # This function sets the SVMP_DEV_CERTIFICATE variable used in svmp.mk
@@ -66,21 +298,8 @@ function do_build () {
 function check_custom_cert () {
   # Environment variables:
   #   SVMP_USE_CUSTOM_KEYS  (GET)
-  #   SVMP_DEV_CERTIFICATE  (SET)
 
-  if [ -z $SVMP_USE_CUSTOM_KEYS ]; then
-    read -p "Use custom keys for SVMP build [y/N]? " -n 1 -r
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-      SVMP_USE_CUSTOM_KEYS="yes"
-    else
-      SVMP_USE_CUSTOM_KEYS="no"
-    fi
-  fi
-  echo
-  echo "SVMP USE CUSTOM KEYS: $SVMP_USE_CUSTOM_KEYS"
-
-  if [[ $SVMP_USE_CUSTOM_KEYS =~ ^[yY] ]]; then
+  if [ "$SVMP_USE_CUSTOM_KEYS" == "yes" ]; then
     generate_custom_certs
   else
     export SVMP_DEV_CERTIFICATE=""
@@ -97,19 +316,10 @@ function generate_custom_certs () {
 
   # Check if CERT_INFO variable is set
   if [ -z "$SVMP_CERT_INFO" ]; then
-    echo
-    echo "To generate Enter Certificate info in the following format:"
-    echo "  /C=US/ST=Virginia/L=Moseley/O=Test Corporation/CN=SVMP/emailAddress=svmp@test.com"
-    echo
-
-    read -p "Enter Certificate information: " SVMP_CERT_INFO
-
-    # If empty information is entered then use default AOSP certificates
-    if [ -z "$SVMP_CERT_INFO" ]; then
+      # If empty information is entered then use default AOSP certificates
       echo "Empty certificate information entered. Using default AOSP certificates."
       export SVMP_DEV_CERTIFICATE=""
       return -1
-    fi
   fi
 
 
@@ -121,7 +331,7 @@ function generate_custom_certs () {
     CERT_VALID="${CERT_VALID#subject= }"
     CERT_VALID="${CERT_VALID%%issuer=*}"
 
-    # Trim whitespace for compariosn
+    # Trim whitespace for comparison
     CERT_VALID="${CERT_VALID##*( )}" # Trim leading whitespace
     CERT_VALID="${CERT_VALID%%*( )}" # Trim trailing wihitespace
     CERT_VALID=$(echo -n "$CERT_VALID" )
@@ -156,13 +366,16 @@ function generate_custom_certs () {
   echo "Generating keys for build."
   echo 
    
-  local OLD_PATH=$PATH
-  PATH="/usr/bin:/usr/local/bin:$PATH"
+  if [[ `which openssl` == *out/host/*/bin/openssl ]] ; then
+    echo "ERROR. PATH points to the Android build openssl instead of the system openssl."
+    echo "       Re-execute $0 in a shell environment that has not been modified by build/envsetup.sh and lunch."
+    exit -1
+  fi
+
   ./development/tools/make_key $CERT_DIR/media "$SVMP_CERT_INFO" <<< ""
   ./development/tools/make_key $CERT_DIR/platform "$SVMP_CERT_INFO" <<< ""
   ./development/tools/make_key $CERT_DIR/shared "$SVMP_CERT_INFO" <<< ""
   ./development/tools/make_key $CERT_DIR/relkey "$SVMP_CERT_INFO" <<< "" # Must be named relkey or change svmp.mk to use something else
-  PATH=$OLD_PATH
 
   export SVMP_DEV_CERTIFICATE="$CERT_DIR/relkey"
 

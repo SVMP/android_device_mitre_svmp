@@ -57,12 +57,10 @@ PRODUCT_COPY_FILES += \
 
 FSTAB_FILE := device/mitre/svmp/fstab.svmp
 
-ifeq ($(SVMP_AIO_IMAGE),yes)
-    FSTAB_FILE := $(addsuffix .aio,$(FSTAB_FILE))
-endif
+FSTAB_FILE := $(addsuffix .$(SVMP_DISK_TYPE),$(FSTAB_FILE))
 
-ifeq ($(SVMP_BUILD_TYPE),virtio)
-    FSTAB_FILE := $(addsuffix .virtio,$(FSTAB_FILE))
+ifeq ($(SVMP_AIO_BUILD),yes)
+    FSTAB_FILE := $(addsuffix .aio,$(FSTAB_FILE))
 endif
 
 PRODUCT_COPY_FILES += $(FSTAB_FILE):root/fstab.svmp

@@ -85,22 +85,20 @@ $(SVMP_AIO_DISK_IMAGE_TARGET): \
 
 SVMP_VDI_SYSTEM_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_system_disk.vdi
 SVMP_VDI_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_data_disk.vdi
+SVMP_VDI_AIO_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.vdi
 
-.PHONY: svmp_system_disk_vdi svmp_data_disk_vdi
+.PHONY: svmp_system_disk_vdi svmp_data_disk_vdi svmp_aio_disk_vdi
 svmp_system_disk_vdi: $(SVMP_VDI_SYSTEM_DISK_IMAGE_TARGET)
 svmp_data_disk_vdi: $(SVMP_VDI_DATA_DISK_IMAGE_TARGET)
+svmp_aio_disk_vdi: $(SVMP_VDI_AIO_DISK_IMAGE_TARGET)
 
-$(SVMP_VDI_SYSTEM_DISK_IMAGE_TARGET): $(SVMP_SYSTEM_DISK_IMAGE_TARGET)
+%.vdi: %.img
+	@echo "Converting image to VDI format: $^"
 	@rm -f $@
 	$(hide) $(qemu-img) convert \
 		-O vdi -f raw \
 		$^ $@
-
-$(SVMP_VDI_DATA_DISK_IMAGE_TARGET): $(SVMP_DATA_DISK_IMAGE_TARGET)
-	@rm -f $@
-	$(hide) $(qemu-img) convert \
-		-O vdi -f raw \
-		$^ $@
+	@echo "Done converting image: $@"
 
 ########################################################################
 # VMDK conversion
@@ -108,22 +106,20 @@ $(SVMP_VDI_DATA_DISK_IMAGE_TARGET): $(SVMP_DATA_DISK_IMAGE_TARGET)
 
 SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_system_disk.vmdk
 SVMP_VMDK_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_data_disk.vmdk
+SVMP_VMDK_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.vmdk
 
-.PHONY: svmp_system_disk_vmdk svmp_data_disk_vmdk
+.PHONY: svmp_system_disk_vmdk svmp_data_disk_vmdk svmp_aio_disk_vmdk
 svmp_system_disk_vmdk: $(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET)
 svmp_data_disk_vmdk: $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET)
+svmp_aio_disk_vmdk: $(SVMP_VMDK_AIO_DISK_IMAGE_TARGET)
 
-$(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET): $(SVMP_SYSTEM_DISK_IMAGE_TARGET)
+%.vmdk: %.img
+	@echo "Converting image to VMDK format: $^"
 	@rm -f $@
 	$(hide) $(qemu-img) convert \
 		-O vmdk -f raw \
 		$^ $@
-
-$(SVMP_VMDK_DATA_DISK_IMAGE_TARGET): $(SVMP_DATA_DISK_IMAGE_TARGET)
-	@rm -f $@
-	$(hide) $(qemu-img) convert \
-		-O vmdk -f raw \
-		$^ $@
+	@echo "Done converting image: $@"
 
 ########################################################################
 # QCOW2 conversion
@@ -131,20 +127,17 @@ $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET): $(SVMP_DATA_DISK_IMAGE_TARGET)
 
 SVMP_QCOW2_SYSTEM_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_system_disk.qcow2
 SVMP_QCOW2_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_data_disk.qcow2
+SVMP_QCOW2_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.qcow2
 
-.PHONY: svmp_system_disk_qcow2 svmp_data_disk_qcow2
+.PHONY: svmp_system_disk_qcow2 svmp_data_disk_qcow2 svmp_aio_disk_qcow2
 svmp_system_disk_qcow2: $(SVMP_QCOW2_SYSTEM_DISK_IMAGE_TARGET)
 svmp_data_disk_qcow2: $(SVMP_QCOW2_DATA_DISK_IMAGE_TARGET)
+svmp_aio_disk_qcow2: $(SVMP_QCOW2_AIO_DISK_IMAGE_TARGET)
 
-$(SVMP_QCOW2_SYSTEM_DISK_IMAGE_TARGET): $(SVMP_SYSTEM_DISK_IMAGE_TARGET)
+%.qcow2: %.img
+	@echo "Converting image to QCOW2 format: $^"
 	@rm -f $@
 	$(hide) $(qemu-img) convert \
 		-O qcow2 -f raw -o compat=0.10 \
 		$^ $@
-
-$(SVMP_QCOW2_DATA_DISK_IMAGE_TARGET): $(SVMP_DATA_DISK_IMAGE_TARGET)
-	@rm -f $@
-	$(hide) $(qemu-img) convert \
-		-O qcow2 -f raw -o compat=0.10 \
-		$^ $@
-
+	@echo "Done converting image: $@"
