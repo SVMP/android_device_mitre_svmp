@@ -55,7 +55,7 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/remount/remount.sh:system/bin/remount.sh \
     $(KERNEL_BIN):kernel
 
-FSTAB_FILE := device/mitre/svmp/fstab.svmp
+FSTAB_FILE := device/mitre/svmp/fstab/fstab.svmp
 
 FSTAB_FILE := $(addsuffix .$(SVMP_DISK_TYPE),$(FSTAB_FILE))
 
