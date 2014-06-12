@@ -106,7 +106,7 @@ svmp_aio_disk_vdi: $(SVMP_VDI_AIO_DISK_IMAGE_TARGET)
 
 SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_system_disk.vmdk
 SVMP_VMDK_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_data_disk.vmdk
-SVMP_VMDK_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.vmdk
+SVMP_VMDK_AIO_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.vmdk
 
 .PHONY: svmp_system_disk_vmdk svmp_data_disk_vmdk svmp_aio_disk_vmdk
 svmp_system_disk_vmdk: $(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET)
@@ -127,7 +127,7 @@ svmp_aio_disk_vmdk: $(SVMP_VMDK_AIO_DISK_IMAGE_TARGET)
 
 SVMP_QCOW2_SYSTEM_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_system_disk.qcow2
 SVMP_QCOW2_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_data_disk.qcow2
-SVMP_QCOW2_DATA_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.qcow2
+SVMP_QCOW2_AIO_DISK_IMAGE_TARGET := $(PRODUCT_OUT)/svmp_aio_disk.qcow2
 
 .PHONY: svmp_system_disk_qcow2 svmp_data_disk_qcow2 svmp_aio_disk_qcow2
 svmp_system_disk_qcow2: $(SVMP_QCOW2_SYSTEM_DISK_IMAGE_TARGET)
