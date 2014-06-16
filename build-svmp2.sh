@@ -50,25 +50,25 @@ function not-yet-implemented() {
 }
 
 if [ -z $SVMP_BUILD_TYPE ] ; then
-    SVMP_BUILD_TYPE=$(whiptail --radiolist --title "Images to Build" \
+    SVMP_BUILD_TYPE=$(whiptail --menu --title "Images to Build" \
         "Choose the image target to build:" $WT_HEIGHT $WT_WIDTH 10 \
-        raw        "  Raw disk image with no container format" on \
-        vdi        "  Raw disk image in VDI format" off \
-        vmdk       "  Raw disk image in VMDK format" off \
-        qcow2      "  Raw disk image in QCOW2 format" off \
-        ovf-vbox   "  OVF appliance for VirtualBox (TODO)" off \
-        ovf-vmware "  OVF appliance for VMware (TODO)" off \
-        ovf-xen    "  OVF appliance for XenServer (TODO)" off \
-        kvm        "  QEMU-KVM libvirt appliance (TODO)" off \
-        aws-ami    "  Amazon Web Services AMI (TODO)" off 3>&1 1>&2 2>&3 ) || exit
+        raw        "   Raw disk image with no container format" \
+        vdi        "   Raw disk image in VDI format" \
+        vmdk       "   Raw disk image in VMDK format" \
+        qcow2      "   Raw disk image in QCOW2 format" \
+        ovf-vbox   "   OVF appliance for VirtualBox" \
+        ovf-vmware "   OVF appliance for VMware (TODO)" \
+        ovf-xen    "   OVF appliance for XenServer (TODO)" \
+        kvm        "   QEMU-KVM libvirt appliance (TODO)" \
+        aws-ami    "   Amazon Web Services AMI (TODO)" 3>&1 1>&2 2>&3 ) || exit
     SHOW_SAVE_DIALOG=yes
 fi
 
-# Some of these will dictate a particular disk controller type
+# Some of these will dictate a particular disk controller type and other settings
 case $SVMP_BUILD_TYPE in
 ovf-vbox)
   SVMP_DISK_TYPE=sdx
-  not-yet-implemented "VirtualBox OVF"
+  SVMP_AIO_BUILD=no
   ;;
 ovf-vmware)
   SVMP_DISK_TYPE=sdx
@@ -265,7 +265,9 @@ function do_build () {
       TGT_SUFFIX="_qcow2"
       ;;
   ovf-vbox)
-      TGT_SUFFIX="_vmdk"
+      TGT_SUFFIX=""
+      MAKE_SYSTEM_TARGET="svmp_vbox_ova"
+      MAKE_DATA_TARGET=
       ;;
   ovf-vmware)
       TGT_SUFFIX="_vmdk"

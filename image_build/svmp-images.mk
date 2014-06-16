@@ -117,7 +117,7 @@ svmp_aio_disk_vmdk: $(SVMP_VMDK_AIO_DISK_IMAGE_TARGET)
 	@echo "Converting image to VMDK format: $^"
 	@rm -f $@
 	$(hide) $(qemu-img) convert \
-		-O vmdk -f raw \
+		-O vmdk -f raw -o compat6 \
 		$^ $@
 	@echo "Done converting image: $@"
 
@@ -138,6 +138,77 @@ svmp_aio_disk_qcow2: $(SVMP_QCOW2_AIO_DISK_IMAGE_TARGET)
 	@echo "Converting image to QCOW2 format: $^"
 	@rm -f $@
 	$(hide) $(qemu-img) convert \
-		-O qcow2 -f raw -o compat=0.10 \
+		-O qcow2 -f raw -o compat=0.10 -c \
 		$^ $@
 	@echo "Done converting image: $@"
+
+########################################################################
+# OVF - VirtualBox
+########################################################################
+
+SVMP_OVA_VIRTUALBOX_TARGET := $(PRODUCT_OUT)/svmp_vbox.ova
+
+.PHONY: svmp_vbox_ova
+svmp_vbox_ova: $(SVMP_OVA_VIRTUALBOX_TARGET)
+
+VBOX_OVA_TMP_VMNAME := svmp-vbox-ova
+VBOX_OVA_TMP_DIR := $(PRODUCT_OUT)/$(VBOX_OVA_TMP_VMNAME)
+
+$(SVMP_OVA_VIRTUALBOX_TARGET): \
+					$(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET) \
+					$(SVMP_VMDK_DATA_DISK_IMAGE_TARGET)
+	@echo "Creating Virtualbox OVA appliance: $@ $^"
+	@echo "  Delete old temp VM if it still exists"
+	@rm -f $@
+	$(hide) $(virtual_box_manager) unregistervm $(VBOX_OVA_TMP_VMNAME) --delete || /bin/true
+	@echo "  Creating temporary VM"
+	$(hide) $(virtual_box_manager) createvm --register \
+		--name $(VBOX_OVA_TMP_VMNAME)
+	$(hide) $(virtual_box_manager) modifyvm \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--memory 1024 --vram 16 --acpi on \
+		--ioapic on --cpus 1 --ostype Linux_64 \
+		--rtcuseutc on
+	$(hide) $(virtual_box_manager) modifyvm \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--nic1 bridged
+	$(hide) $(virtual_box_manager) modifyvm \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--nictype1 82540EM
+	@echo "  Adding disks"
+	$(hide) $(virtual_box_manager) storagectl \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--name "IDE Controller" --add ide
+	$(hide) $(virtual_box_manager) storageattach \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--storagectl "IDE Controller" --port 0 --device 0 --type hdd \
+		--medium $(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET)
+	$(hide) $(virtual_box_manager) storageattach \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--storagectl "IDE Controller" --port 1 --device 0 --type hdd \
+		--medium $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET)
+	@echo "  Exporting to OVF"
+	$(hide) $(virtual_box_manager) export \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		-o $@ \
+		--ovf20 --manifest \
+		--vsys 0 \
+		--product "Secure Virtual Mobile Platform" \
+		--producturl "https://svmp.github.io" \
+		--version "$(PRODUCT_VERSION)" \
+		--description "$(PRODUCT_DESCRIPTION)" \
+		--eulafile $(TARGET_DEVICE_DIR)/NOTICE
+	# clean up the temp VM
+	@echo "  Deleting the temp VM"
+	$(hide) $(virtual_box_manager) storageattach \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--storagectl "IDE Controller" --port 0 --device 0 --type hdd \
+		--medium none
+	$(hide) $(virtual_box_manager) storageattach \
+		"$(VBOX_OVA_TMP_VMNAME)" \
+		--storagectl "IDE Controller" --port 1 --device 0 --type hdd \
+		--medium none
+	$(hide) $(virtual_box_manager) closemedium disk $(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET) 
+	$(hide) $(virtual_box_manager) closemedium disk $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET) 
+	$(hide) $(virtual_box_manager) unregistervm $(VBOX_OVA_TMP_VMNAME) --delete
+	@rm -rf $(VBOX_OVA_TMP_DIR)

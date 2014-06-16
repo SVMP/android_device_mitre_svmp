@@ -87,7 +87,9 @@ endif
 
 PRODUCT_POLICY := android.policy_phone
 
+PRODUCT_VERSION := 1.4.1
+
 PRODUCT_NAME := svmp
 PRODUCT_DEVICE := svmp
 PRODUCT_BRAND := MITRE
-PRODUCT_MODEL := Secure Virtual Mobile Platform v1.4.1
+PRODUCT_MODEL := Secure Virtual Mobile Platform $(PRODUCT_VERSION)
