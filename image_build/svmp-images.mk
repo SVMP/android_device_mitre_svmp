@@ -178,20 +178,21 @@ $(SVMP_OVA_VIRTUALBOX_TARGET): \
 	@echo "  Adding disks"
 	$(hide) $(virtual_box_manager) storagectl \
 		"$(VBOX_OVA_TMP_VMNAME)" \
-		--name "IDE Controller" --add ide
+		--name "SATA Controller" --add sata --controller IntelAHCI \
+		--portcount 2 --hostiocache on --bootable on
 	$(hide) $(virtual_box_manager) storageattach \
 		"$(VBOX_OVA_TMP_VMNAME)" \
-		--storagectl "IDE Controller" --port 0 --device 0 --type hdd \
+		--storagectl "SATA Controller" --port 0 --device 0 --type hdd \
 		--medium $(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET)
 	$(hide) $(virtual_box_manager) storageattach \
 		"$(VBOX_OVA_TMP_VMNAME)" \
-		--storagectl "IDE Controller" --port 1 --device 0 --type hdd \
+		--storagectl "SATA Controller" --port 1 --device 0 --type hdd \
 		--medium $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET)
 	@echo "  Exporting to OVF"
 	$(hide) $(virtual_box_manager) export \
 		"$(VBOX_OVA_TMP_VMNAME)" \
 		-o $@ \
-		--ovf20 --manifest \
+		--ovf10 --manifest \
 		--vsys 0 \
 		--product "Secure Virtual Mobile Platform" \
 		--producturl "https://svmp.github.io" \
@@ -202,11 +203,11 @@ $(SVMP_OVA_VIRTUALBOX_TARGET): \
 	@echo "  Deleting the temp VM"
 	$(hide) $(virtual_box_manager) storageattach \
 		"$(VBOX_OVA_TMP_VMNAME)" \
-		--storagectl "IDE Controller" --port 0 --device 0 --type hdd \
+		--storagectl "SATA Controller" --port 0 --device 0 --type hdd \
 		--medium none
 	$(hide) $(virtual_box_manager) storageattach \
 		"$(VBOX_OVA_TMP_VMNAME)" \
-		--storagectl "IDE Controller" --port 1 --device 0 --type hdd \
+		--storagectl "SATA Controller" --port 1 --device 0 --type hdd \
 		--medium none
 	$(hide) $(virtual_box_manager) closemedium disk $(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET) 
 	$(hide) $(virtual_box_manager) closemedium disk $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET) 
