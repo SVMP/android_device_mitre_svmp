@@ -121,6 +121,14 @@ svmp_aio_disk_vmdk: $(SVMP_VMDK_AIO_DISK_IMAGE_TARGET)
 		$^ $@
 	@echo "Done converting image: $@"
 
+#%.vmdk: %.img
+#	@echo "Converting image to VMDK format: $^"
+#	@rm -f $@
+#	$(hide) $(virtual_box_manager) convertfromraw \
+#		--format VMDK --variant Standard \
+#		$^ $@
+#	@echo "Done converting image: $@"
+
 ########################################################################
 # QCOW2 conversion
 ########################################################################
@@ -157,10 +165,10 @@ VBOX_OVA_TMP_DIR := $(PRODUCT_OUT)/$(VBOX_OVA_TMP_VMNAME)
 $(SVMP_OVA_VIRTUALBOX_TARGET): \
 					$(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET) \
 					$(SVMP_VMDK_DATA_DISK_IMAGE_TARGET)
-	@echo "Creating Virtualbox OVA appliance: $@ $^"
+	@echo "Creating Virtualbox OVA appliance: $@"
 	@echo "  Delete old temp VM if it still exists"
 	@rm -f $@
-	$(hide) $(virtual_box_manager) unregistervm $(VBOX_OVA_TMP_VMNAME) --delete || /bin/true
+	$(hide) $(virtual_box_manager) unregistervm $(VBOX_OVA_TMP_VMNAME) --delete 2>/dev/null || /bin/true
 	@echo "  Creating temporary VM"
 	$(hide) $(virtual_box_manager) createvm --register \
 		--name $(VBOX_OVA_TMP_VMNAME)
@@ -213,3 +221,41 @@ $(SVMP_OVA_VIRTUALBOX_TARGET): \
 	$(hide) $(virtual_box_manager) closemedium disk $(SVMP_VMDK_DATA_DISK_IMAGE_TARGET) 
 	$(hide) $(virtual_box_manager) unregistervm $(VBOX_OVA_TMP_VMNAME) --delete
 	@rm -rf $(VBOX_OVA_TMP_DIR)
+	@echo "Done creating OVA: $@"
+
+
+########################################################################
+# OVF - VMware
+########################################################################
+
+SVMP_OVA_VMWARE_TARGET := $(PRODUCT_OUT)/svmp_vmware.ova
+SVMP_OVF_VMWARE_TARGET := $(PRODUCT_OUT)/svmp_vmware_ovf/svmp_vmware.ovf
+
+.PHONY: svmp_vmware_ova
+svmp_vmware_ova: $(SVMP_OVA_VMWARE_TARGET)
+
+VMWARE_OVA_TMP_VMNAME := svmp-vmware-ova
+VMWARE_OVA_TMP_DIR := $(PRODUCT_OUT)/$(VMWARE_OVA_TMP_VMNAME)
+
+VMWARE_OVF_SED_REPLACE := </Name><ovf:EulaSection>
+VMWARE_OVF_SED_WITH := </Name><ProductSection><Info>Meta-information about the installed software</Info><Product>Secure Virtual Mobile Platform</Product><Version>$(PRODUCT_VERSION)</Version><ProductUrl>https://svmp\.github\.io</ProductUrl></ProductSection><ovf:EulaSection>
+
+$(SVMP_OVF_VMWARE_TARGET): \
+					$(SVMP_VMDK_SYSTEM_DISK_IMAGE_TARGET) \
+					$(SVMP_VMDK_DATA_DISK_IMAGE_TARGET)
+	@echo "Creating VMware OVF appliance: $@"
+	@mkdir -p `dirname $@`
+	@cp $(TARGET_DEVICE_DIR)/image_build/svmp_vmware.vmx $(PRODUCT_OUT)/svmp_vmware.vmx
+	@echo ovftool --overwrite --eula@=$(TARGET_DEVICE_DIR)/NOTICE $(PRODUCT_OUT)/svmp_vmware.vmx $@
+	$(hide) ovftool --overwrite --eula@=$(TARGET_DEVICE_DIR)/NOTICE $(PRODUCT_OUT)/svmp_vmware.vmx $@
+	@echo "Replace this: \"$(VMWARE_OVF_SED_REPLACE)\""
+	@echo "With this: \"$(VMWARE_OVF_SED_WITH)\""
+	@echo sed -i'.orig' 's|$(VMWARE_OVF_SED_REPLACE)|$(VMWARE_OVF_SED_WITH)|' $@
+	@sed -i'.orig' 's|$(VMWARE_OVF_SED_REPLACE)|$(VMWARE_OVF_SED_WITH)|' $@
+	@echo "Done creating OVF: $@" 
+
+$(SVMP_OVA_VMWARE_TARGET): $(SVMP_OVF_VMWARE_TARGET)
+	@echo "Creating VMware OVA appliance: $@"
+	@echo ovftool --skipManifestCheck --overwrite --name="svmp-vmware-ova" $^ $@
+	$(hide) ovftool --skipManifestCheck --overwrite --name="svmp-vmware-ova" $^ $@
+	@echo "Done creating OVA: $@"

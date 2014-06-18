@@ -57,7 +57,7 @@ if [ -z $SVMP_BUILD_TYPE ] ; then
         vmdk       "   Raw disk image in VMDK format" \
         qcow2      "   Raw disk image in QCOW2 format" \
         ovf-vbox   "   OVF appliance for VirtualBox" \
-        ovf-vmware "   OVF appliance for VMware (TODO)" \
+        ovf-vmware "   OVF appliance for VMware" \
         ovf-xen    "   OVF appliance for XenServer (TODO)" \
         kvm        "   QEMU-KVM libvirt appliance (TODO)" \
         aws-ami    "   Amazon Web Services AMI (TODO)" 3>&1 1>&2 2>&3 ) || exit
@@ -72,7 +72,7 @@ ovf-vbox)
   ;;
 ovf-vmware)
   SVMP_DISK_TYPE=sdx
-  not-yet-implemented "VMware OVF"
+  SVMP_AIO_BUILD=no
   ;;
 ovf-xen)
   SVMP_DISK_TYPE=xdx
@@ -270,7 +270,9 @@ function do_build () {
       MAKE_DATA_TARGET=
       ;;
   ovf-vmware)
-      TGT_SUFFIX="_vmdk"
+      TGT_SUFFIX=""
+      MAKE_SYSTEM_TARGET="svmp_vmware_ova"
+      MAKE_DATA_TARGET=
       ;;
   ovf-xen)
       TGT_SUFFIX="_vmdk"
