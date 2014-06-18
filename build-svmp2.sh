@@ -69,10 +69,13 @@ case $SVMP_BUILD_TYPE in
 ovf-vbox)
   SVMP_DISK_TYPE=sdx
   SVMP_AIO_BUILD=no
+  #check if VBoxManage is available in the PATH, fail otherwise
+  which VBoxManage || { echo "VBoxManage utility not found in the PATH. Exiting." ; exit 1 ; }
   ;;
 ovf-vmware)
   SVMP_DISK_TYPE=sdx
   SVMP_AIO_BUILD=no
+  which ovftool || { echo "VMware ovftool utility not found in the PATH. Exiting." ; exit 1 ; }
   ;;
 ovf-xen)
   SVMP_DISK_TYPE=xdx
