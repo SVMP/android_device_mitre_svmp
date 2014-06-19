@@ -73,9 +73,10 @@ endif
 # No need to specify -j for the submake because the parent make process
 # will communicate the information to the child
 # If building a 64-bit kernel, remove ARCH=x86 from the make line
-.PHONY: build_kernel
-build_kernel:
+.PHONY: build_kernel kernel_config
+kernel_config: $(SVMP_KERN_CONFIG)
 	cp $(SVMP_KERN_CONFIG) $(KERNEL_SRC)/.config
+build_kernel: kernel_config
 	$(MAKE) ARCH=x86 bzImage -C $(KERNEL_SRC)
 $(KERNEL_BIN): build_kernel
 
