@@ -105,7 +105,7 @@ if [ -z $SVMP_DISK_TYPE ] ; then
         sdx "    /dev/sdX - SATA / SCSI" \
         hdx "    /dev/hdX - IDE" \
         vdx "    /dev/vdX - QEMU / KVM Virtio" \
-        xdx "    /dev/xdX - Xen (also AWS & Rackspace)" 3>&1 1>&2 2>&3 ) || exit
+        xvdx "    /dev/xvdX - Xen PV (also AWS & Rackspace)" 3>&1 1>&2 2>&3 ) || exit
     SHOW_SAVE_DIALOG=yes
 fi
 
