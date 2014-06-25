@@ -164,7 +164,9 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_MAX_ACCELEROMETER,               // maxRange
       SENSOR_RES_ACCELEROMETER,               // resolution
       0.25f,                                  // power
-      0,                                      // minDelay 
+      0,                                      // minDelay
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Magnetic Field Sensor",    // name
@@ -176,6 +178,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_MAGNETIC_FIELD,              // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Orientation Sensor",       // name
@@ -187,6 +191,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_ORIENTATION,                 // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Gyroscope",                // name
@@ -198,6 +204,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_GYROSCOPE,                   // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Light Sensor",             // name
@@ -209,6 +217,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_LIGHT,                       // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Pressure Sensor",          // name
@@ -220,6 +230,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_PRESSURE,                    // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
 //    { "SVMP Remote Temperature Sensor",       // name
@@ -231,6 +243,8 @@ static const struct sensor_t sSensorList[] = {
 //      SENSOR_RES_TEMPERATURE,                 // resolution
 //      0.25f,                                  // power
 //      0,                                      // minDelay 
+//      0,                                      // fifoReservedEventCount
+//      0,                                      // fifoMaxEventCount
 //      {}},                                    // reserved
 
     { "SVMP Remote Proximity Sensor",         // name
@@ -242,6 +256,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_PROXIMITY,                   // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Gravity Sensor",           // name
@@ -253,6 +269,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_GRAVITY,                     // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
     { "SVMP Remote Linear Acceleration Sensor", // name
@@ -264,6 +282,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_LINEAR_ACCELERATION,           // resolution
       0.25f,                                    // power
       0,                                        // minDelay 
+      0,                                        // fifoReservedEventCount
+      0,                                        // fifoMaxEventCount
       {}},                                      // reserved
 
     { "SVMP Remote Rotation Vector Sensor",   // name
@@ -275,6 +295,8 @@ static const struct sensor_t sSensorList[] = {
       SENSOR_RES_ROTATION_VECTOR,             // resolution
       0.25f,                                  // power
       0,                                      // minDelay 
+      0,                                      // fifoReservedEventCount
+      0,                                      // fifoMaxEventCount
       {}},                                    // reserved
 
 //    { "SVMP Remote Relative Humidity Sensor", // name
@@ -286,6 +308,8 @@ static const struct sensor_t sSensorList[] = {
 //      SENSOR_RES_RELATIVE_HUMIDITY,           // resolution
 //      0.25f,                                  // power
 //      0,                                      // minDelay 
+//      0,                                      // fifoReservedEventCount
+//      0,                                      // fifoMaxEventCount
 //      {}},                                    // reserved
 
 //    { "SVMP Remote Ambient Temperature Sensor", // name
@@ -297,6 +321,8 @@ static const struct sensor_t sSensorList[] = {
 //      SENSOR_RES_AMBIENT_TEMPERATURE,           // resolution
 //      0.25f,                                    // power
 //      0,                                        // minDelay 
+//      0,                                        // fifoReservedEventCount
+//      0,                                        // fifoMaxEventCount
 //      {}},                                      // reserved
 
 };
