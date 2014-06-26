@@ -1,20 +1,10 @@
-on early-init
-    mkdir /mnt/shell 0700 shell shell
-    mkdir /storage 0050 root sdcard_r
-
-    # See storage config details at http://source.android.com/tech/storage/
+on init
     mkdir /mnt/shell/emulated 0700 shell shell
     mkdir /storage/emulated 0555 root root
 
     export EXTERNAL_STORAGE /storage/emulated/legacy
     export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
     export EMULATED_STORAGE_TARGET /storage/emulated
-
-    ## Support legacy paths
-    symlink /storage/emulated/legacy /sdcard
-    symlink /storage/emulated/legacy /mnt/sdcard
-    symlink /storage/emulated/legacy /storage/sdcard0
-    symlink /mnt/shell/emulated/0 /storage/emulated/legacy
 
 on boot
     setprop ARGH ARGH
@@ -36,7 +26,6 @@ on boot
 
 # start essential services
     start fbset
-    start qemud
     start svmp-logcat
     start netcfg
     start print-net
@@ -44,7 +33,6 @@ on boot
     setprop ro.setupwizard.mode EMULATOR
 
 on fs
-# mount sda (system) and sdb (data) partitions
     mount_all /fstab.svmp
     setprop ro.crypto.fuse_sdcard true
 
@@ -52,25 +40,8 @@ on fs
 # like NetworkLocationProvider and LocationCollector
     setprop ro.com.google.locationfeatures 1
 
-# For the emulator, which bypasses Setup Wizard, you can specify
-# account info for the device via these two properties.  Google
-# Login Service will insert these accounts into the database when
-# it is created (ie, after a data wipe).
-#
-#   setprop ro.config.hosted_account username@hosteddomain.org:password
-#   setprop ro.config.google_account username@gmail.com:password
-#
-# You MUST have a Google account on the device, and you MAY
-# additionally have a hosted account.  No other configuration is
-# supported, and arbitrary breakage may result if you specify
-# something else.
-
 
 ###
-
-# virtual sdcard daemon running as media_rw (1023)
-service sdcard /system/bin/sdcard /data/media /mnt/shell/emulated 1023 1023
-    class late_start
 
 on post-fs-data
 	mkdir /data/misc/dhcp 0770 dhcp dhcp
@@ -78,17 +49,6 @@ on post-fs-data
     mkdir /data/media 0770 media_rw media_rw
 
     setprop vold.post_fs_data_done 1
-
-service qemu-props /system/bin/qemu-props
-    class core
-    user root
-    group root
-    oneshot
-
-service qemud /system/bin/qemud
-    class precore
-    socket qemud    stream 666
-    oneshot
 
 # -Q is a special logcat option that forces the
 # program to check wether it runs on the emulator
@@ -98,6 +58,9 @@ service qemud /system/bin/qemud
 
 service svmp-logcat /system/bin/logcat -Q
     oneshot
+
+service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
+    class late_start
 
 # Enable networking so that adb can connect
 service netcfg /system/bin/netcfg eth0 dhcp
