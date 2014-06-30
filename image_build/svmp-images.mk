@@ -19,9 +19,35 @@ svmp_aio_disk: $(SVMP_AIO_DISK_IMAGE_TARGET)
 # The qemu-img binary. Needed for converting between disk image types.
 qemu-img := qemu-img
 
+########################################################################
+# Boot image with SVMP grub customization
+########################################################################
+
+svmp_grub_config := $(TARGET_DEVICE_DIR)/image_build/grub.menu.lst
+
+SVMP_INTERNAL_BOOTIMAGE_ARGS := $(INTERNAL_BOOTIMAGE_ARGS)
+
+SVMP_INSTALLED_BOOTIMAGE_TARGET := $(PRODUCT_OUT)/svmp_boot.img
+
+ifeq ($(TARGET_BOOTIMAGE_USE_EXT2),true)
+tmp_dir_for_image := $(call intermediates-dir-for,EXECUTABLES,boot_img)/bootimg
+SVMP_INTERNAL_BOOTIMAGE_ARGS := $(INTERNAL_BOOTIMAGE_ARGS)
+SVMP_INTERNAL_BOOTIMAGE_ARGS += --tmpdir $(tmp_dir_for_image)
+SVMP_INTERNAL_BOOTIMAGE_ARGS += --genext2fs $(MKEXT2IMG)
+SVMP_INTERNAL_BOOTIMAGE_ARGS += --grubconf $(svmp_grub_config)
+$(SVMP_INSTALLED_BOOTIMAGE_TARGET): $(MKEXT2IMG) $(INTERNAL_BOOTIMAGE_FILES) $(INSTALLED_BOOTIMAGE_TARGET)
+	$(call pretty,"Target boot image: $@")
+	@echo $(MKEXT2BOOTIMG) $(SVMP_INTERNAL_BOOTIMAGE_ARGS) --output $@
+	$(hide) $(MKEXT2BOOTIMG) $(SVMP_INTERNAL_BOOTIMAGE_ARGS) --output $@
+endif # TARGET_BOOTIMAGE_USE_EXT2
+
+########################################################################
+# RAW disk images
+########################################################################
+
 $(SVMP_SYSTEM_DISK_IMAGE_TARGET): \
 					$(INSTALLED_SYSTEMIMAGE) \
-					$(INSTALLED_BOOTIMAGE_TARGET) \
+					$(SVMP_INSTALLED_BOOTIMAGE_TARGET) \
 					$(INSTALLED_CACHEIMAGE_TARGET) \
 					$(grub_bin) \
 					$(edit_mbr) \
@@ -30,11 +56,11 @@ $(SVMP_SYSTEM_DISK_IMAGE_TARGET): \
 	@rm -f $@
 	$(hide) cat $(grub_bin) > $@
 	@echo $(edit_mbr) -l $(svmp_system_disk_layout) -i $@ \
-		inst_boot=$(INSTALLED_BOOTIMAGE_TARGET) \
+		inst_boot=$(SVMP_INSTALLED_BOOTIMAGE_TARGET) \
 		inst_system=$(INSTALLED_SYSTEMIMAGE) \
                 inst_cache=$(INSTALLED_CACHEIMAGE_TARGET) ;
 	$(hide) $(edit_mbr) -l $(svmp_system_disk_layout) -i $@ \
-		inst_boot=$(INSTALLED_BOOTIMAGE_TARGET) \
+		inst_boot=$(SVMP_INSTALLED_BOOTIMAGE_TARGET) \
 		inst_system=$(INSTALLED_SYSTEMIMAGE)  \
                 inst_cache=$(INSTALLED_CACHEIMAGE_TARGET) ;
 	@echo "Done with bootable android system-disk image -[ $@ ]-"
@@ -58,7 +84,7 @@ $(SVMP_DATA_DISK_IMAGE_TARGET): \
 
 $(SVMP_AIO_DISK_IMAGE_TARGET): \
 					$(INSTALLED_SYSTEMIMAGE) \
-					$(INSTALLED_BOOTIMAGE_TARGET) \
+					$(SVMP_INSTALLED_BOOTIMAGE_TARGET) \
 					$(INSTALLED_CACHEIMAGE_TARGET) \
 					$(INSTALLED_USERDATAIMAGE_TARGET) \
 					$(grub_bin) \
@@ -68,12 +94,12 @@ $(SVMP_AIO_DISK_IMAGE_TARGET): \
 	@rm -f $@
 	$(hide) cat $(grub_bin) > $@
 	@echo $(edit_mbr) -l $(svmp_aio_disk_layout) -i $@ \
-		inst_boot=$(INSTALLED_BOOTIMAGE_TARGET) \
+		inst_boot=$(SVMP_INSTALLED_BOOTIMAGE_TARGET) \
 		inst_system=$(INSTALLED_SYSTEMIMAGE) \
                 inst_cache=$(INSTALLED_CACHEIMAGE_TARGET) \
                 inst_data=$(INSTALLED_USERDATAIMAGE_TARGET) ;
 	$(hide) $(edit_mbr) -l $(svmp_aio_disk_layout) -i $@ \
-		inst_boot=$(INSTALLED_BOOTIMAGE_TARGET) \
+		inst_boot=$(SVMP_INSTALLED_BOOTIMAGE_TARGET) \
 		inst_system=$(INSTALLED_SYSTEMIMAGE)  \
                 inst_cache=$(INSTALLED_CACHEIMAGE_TARGET) \
                 inst_data=$(INSTALLED_USERDATAIMAGE_TARGET) ;

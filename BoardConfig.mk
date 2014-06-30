@@ -14,12 +14,11 @@ TARGET_CPU_ABI := x86
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_BOOTIMAGE_USE_EXT2 := true
 
-# For VirtualBox and likely other emulators
-BOARD_INSTALLER_CMDLINE := init=/init console=ttyS0 console=tty0 vga=788 verbose
-#BOARD_KERNEL_CMDLINE := init=/init qemu=1 console=ttyS0 console=tty0 vga=788 verbose androidboot.hardware=svmp androidboot.console=ttyS0 android.qemud=ttyS1
-#BOARD_KERNEL_CMDLINE := init=/init console=ttyS0 vga=normal verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1
-BOARD_KERNEL_CMDLINE := init=/init noefi console=ttyS0 verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1
+# Enable use of bootable/diskinstalled. Required for building VM disk images.
 TARGET_USE_DISKINSTALLER := true
+
+# Kernel boot command line
+BOARD_KERNEL_CMDLINE := init=/init noefi console=ttyS0 verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1
 
 TARGET_DISK_LAYOUT_CONFIG := build/target/board/vbox_x86/disk_layout.conf
 
@@ -36,7 +35,7 @@ BOARD_SYSTEMIMAGE_PARTITION_SIZE := 500000000
 BOARD_CACHEIMAGE_PARTITION_SIZE := 500000000
 BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
 
-# Reserve 4G for the cache partition
+# Reserve 4G for the data partition
 BOARD_USERDATAIMAGE_PARTITION_SIZE := 4000000000
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := ext4
 

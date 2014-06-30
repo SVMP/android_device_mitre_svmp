@@ -1,0 +1,10 @@
+rootnoverify (hd0,0)
+default=0
+hiddenmenu
+timeout 0
+fallback 0
+
+title SVMP
+       cmdline (hd0,0)/cmdline
+       kernel --use-cmd-line (hd0,0)/kernel
+       initrd (hd0,0)/ramdisk
