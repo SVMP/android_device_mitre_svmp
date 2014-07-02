@@ -1,10 +1,9 @@
-rootnoverify (hd0,0)
+root (hd0,0)
 default=0
 hiddenmenu
 timeout 0
 fallback 0
 
 title SVMP
-       cmdline (hd0,0)/cmdline
-       kernel --use-cmd-line (hd0,0)/kernel
+       kernel (hd0,0)/kernel init=/init noefi console=ttyS0 verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1
        initrd (hd0,0)/ramdisk
