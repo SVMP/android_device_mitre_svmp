@@ -1,0 +1,9 @@
+root (hd0,0)
+default=0
+hiddenmenu
+timeout 0
+fallback 0
+
+title SVMP
+       kernel (hd0,0)/kernel init=/init noefi console=ttyS0 verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1
+       initrd (hd0,0)/ramdisk

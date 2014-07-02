@@ -55,6 +55,10 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/remount/remount.sh:system/bin/remount.sh \
     $(KERNEL_BIN):kernel
 
+########################################################################
+# fstab
+########################################################################
+
 FSTAB_FILE := device/mitre/svmp/fstab/fstab.svmp
 
 FSTAB_FILE := $(addsuffix .$(SVMP_DISK_TYPE),$(FSTAB_FILE))
@@ -65,10 +69,17 @@ endif
 
 PRODUCT_COPY_FILES += $(FSTAB_FILE):root/fstab.svmp
 
+########################################################################
+# sshd
+########################################################################
 
 ifdef SVMP_AUTHORIZED_KEYS
     PRODUCT_COPY_FILES += $(SVMP_AUTHORIZED_KEYS):system/etc/ssh/authorized_keys
 endif
+
+########################################################################
+# kernel
+########################################################################
 
 # No need to specify -j for the submake because the parent make process
 # will communicate the information to the child
@@ -81,6 +92,10 @@ build_kernel: kernel_config
 $(KERNEL_BIN): build_kernel
 
 $(call inherit-product, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
+
+########################################################################
+# custom signing keys
+########################################################################
 
 ifdef SVMP_DEV_CERTIFICATE
     PRODUCT_DEFAULT_DEV_CERTIFICATE := $(SVMP_DEV_CERTIFICATE)
