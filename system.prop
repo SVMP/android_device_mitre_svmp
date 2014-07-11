@@ -5,7 +5,8 @@ lockscreen.disabled=yes
 
 # 234 is a good DPI for the NexusS.
 
-qemu.hw.mainkeys=0
+# soft keys only needed for non-Android devices
+#qemu.hw.mainkeys=0
 
 # Forces Launcher to allow rotating when orientation changes
 log.tag.launcher_force_rotate=VERBOSE
