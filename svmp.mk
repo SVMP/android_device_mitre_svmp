@@ -103,7 +103,7 @@ endif
 
 PRODUCT_POLICY := android.policy_phone
 
-PRODUCT_VERSION := 1.4.1
+PRODUCT_VERSION := 1.5.0
 
 PRODUCT_NAME := svmp
 PRODUCT_DEVICE := svmp
