@@ -55,6 +55,10 @@ namespace android_audio_legacy {
     using android::Mutex;
     using android::AutoMutex;
 
+//  AudioAACStreamIn and AudioAACStreamOut are virtual HAL devices that
+//  rely upon a shared mmaped buffer. The use case is if a remote device wants to receive output, it will
+//  read from AudioAACStreamIn. Audioflinger will write to AudioAACStreamOut.
+
 class AudioFakeHardware;
 // ----------------------------------------------------------------------------
 
@@ -69,11 +73,11 @@ public:
             int *pFormat,
             uint32_t *pChannels,
             uint32_t *pRate);
+
     
-    //virtual status_t    set(int *pFormat, uint32_t *pChannels, uint32_t *pRate);
     virtual uint32_t    sampleRate() const { return 44100; }
     virtual size_t     bufferSize() const { return 4096; }
-    virtual uint32_t   channels() const { return AudioSystem::CHANNEL_OUT_STEREO; }
+    virtual uint32_t   channels() const { return AudioSystem::CHANNEL_OUT_MONO; }
     virtual int         format() const { return AudioSystem::PCM_16_BIT; }
     virtual uint32_t    latency() const { return 20; }
     virtual status_t    setVolume(float left, float right) { return INVALID_OPERATION; }
@@ -95,9 +99,9 @@ private:
 
 class AudioAACStreamIn : public AudioStreamIn {
 public:
-                             AudioAACStreamIn() : mAudioHardware(0), mFd(-1) {}
-        virtual             ~AudioAACStreamIn();
-        virtual status_t set(
+    AudioAACStreamIn() : mAudioHardware(0), mFd(-1) {}
+    virtual             ~AudioAACStreamIn();
+    virtual status_t set(
             AudioFakeHardware *hw,
             int mFd,
             uint32_t devices,
@@ -105,21 +109,20 @@ public:
             uint32_t *pChannels,
             uint32_t *pRate,
             AudioSystem::audio_in_acoustics acoustics);
-	//virtual status_t    set(int *pFormat, uint32_t *pChannels, uint32_t *pRate);
-        
-	virtual uint32_t    sampleRate() const { return 8000; }
-	virtual size_t      bufferSize() const { return 320; }
-	virtual uint32_t    channels() const { return AudioSystem::CHANNEL_IN_STEREO; }
-	virtual int         format() const { return AudioSystem::PCM_16_BIT; }
-        virtual status_t    setGain(float gain) {  return INVALID_OPERATION; }
-	virtual ssize_t     read(void* buffer, ssize_t bytes);
-	virtual status_t    dump(int fd, const Vector<String16>& args);
-	virtual status_t    standby(){return NO_ERROR;}
-	virtual status_t    setParameters(const String8& keyValuePairs);// { return NO_ERROR;}
-	virtual String8     getParameters(const String8& keys);//{return keys;}
-	virtual unsigned int  getInputFramesLost() const { return 0; }
-	virtual status_t addAudioEffect(effect_handle_t effect){ return NO_ERROR;}
-	virtual status_t removeAudioEffect(effect_handle_t effect){ return NO_ERROR;}
+
+    virtual uint32_t    sampleRate() const { return 44100; }
+    virtual size_t     bufferSize() const { return 4096; }
+    virtual uint32_t    channels() const { return AudioSystem::CHANNEL_IN_MONO; }
+    virtual int         format() const { return AudioSystem::PCM_16_BIT; }
+    virtual status_t    setGain(float gain) {  return INVALID_OPERATION; }
+    virtual ssize_t     read(void* buffer, ssize_t bytes);
+    virtual status_t    dump(int fd, const Vector<String16>& args);
+    virtual status_t    standby(){return NO_ERROR;}
+    virtual status_t    setParameters(const String8& keyValuePairs);
+    virtual String8     getParameters(const String8& keys);
+    virtual unsigned int  getInputFramesLost() const { return 0; }
+    virtual status_t addAudioEffect(effect_handle_t effect){ return NO_ERROR;}
+    virtual status_t removeAudioEffect(effect_handle_t effect){ return NO_ERROR;}
 	
 private:
 	struct timeval last;
@@ -161,8 +164,6 @@ public:
                                 status_t *status,
                                 AudioSystem::audio_in_acoustics acoustics);
     virtual    void        closeInputStream(AudioStreamIn* in);
-    //static android::Mutex Writelock;
-    //static android::Condition shouldReadCondition;
 
 
 protected:
