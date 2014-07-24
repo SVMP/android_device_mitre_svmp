@@ -2,12 +2,18 @@
 
 sleep 5
 
+echo > /dev/tty0
+echo > /dev/tty0
+echo > /dev/tty0
+
 /system/bin/netcfg | while read line
 do
   echo "netcfg: $line" > /dev/kmsg
+  echo "netcfg: $line" > /dev/tty0
 done
 
 /system/bin/ip route | while read line
 do
   echo "ip route: $line" > /dev/kmsg
+  echo "ip route: $line" > /dev/tty0
 done
