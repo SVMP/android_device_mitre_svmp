@@ -6,7 +6,7 @@ endif
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
 
-############## MOCSI ###########
+############## SVMP ###########
 
 DEVICE_PACKAGE_OVERLAYS := device/mitre/svmp/overlay
 
@@ -36,7 +36,6 @@ PRODUCT_PACKAGES += \
 		sensors.svmp  \
 		libremote_events_jni \
 		libjingle_peerconnection_so.so \
-		scp sftp sshd ssh-keygen start-ssh \
 		e2fsck \
 		Email
 
@@ -72,6 +71,7 @@ PRODUCT_COPY_FILES += $(FSTAB_FILE):root/fstab.svmp
 ########################################################################
 
 ifdef SVMP_AUTHORIZED_KEYS
+    PRODUCT_PACKAGES += scp sftp sshd ssh-keygen start-ssh
     PRODUCT_COPY_FILES += $(SVMP_AUTHORIZED_KEYS):system/etc/ssh/authorized_keys
 endif
 
