@@ -18,7 +18,7 @@ TARGET_BOOTIMAGE_USE_EXT2 := true
 TARGET_USE_DISKINSTALLER := true
 
 # Kernel boot command line
-BOARD_KERNEL_CMDLINE := init=/init noefi console=ttyS0 verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1
+BOARD_KERNEL_CMDLINE := init=/init noefi console=ttyS0 verbose androidboot.hardware=svmp androidboot.console=ttyS0 video=vfb: vfb_enable=1 tsc=reliable qemu=1 consoleblank=0
 
 TARGET_DISK_LAYOUT_CONFIG := build/target/board/vbox_x86/disk_layout.conf
 

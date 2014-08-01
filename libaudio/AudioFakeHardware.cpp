@@ -50,7 +50,7 @@ limitations under the License.
 
 // MOCSI - MITRE 2012
 // Dylan Ladwig <dladwig@mitre.org>, <dylan.ladwig@gmail.com>
-// Updates Feb. 2014
+// rewrite Feb. 2014, July 2014 by Andy Pyles <apyles@mitre.org)
 
 
 #define LOG_TAG "LibMOCSIAudio"
@@ -78,134 +78,91 @@ static char const * const kAudioDeviceName = "/dev/audio/audio_loop";
 #define BUFFER_SIZE 65536
 
 extern "C" {
-	int fd=-1;
-	unsigned short *position;
-	unsigned short *data;
-	// file locking mmapped files
+int fd=-1;
+unsigned char *position;
+unsigned char *data;
+// file locking mmapped files
 
-	int infd=-1;
-	unsigned short *inposition;
-	unsigned short *indata;
-	// fcntl file locking mechanism
-	// We use a read lock
-	int SetLock(int FD){
-		struct flock fl;
-		fl.l_type = F_RDLCK;
-		fl.l_whence = SEEK_SET;
-		fl.l_start = 0;
-		fl.l_len = 0;
-		if (fcntl(FD, F_SETLKW,&fl) == -1)
-			return -1;
-		return 1;
-	}
-	int GetLock(int FD) {
-		struct flock fl;
-		fl.l_type = F_RDLCK;
-		fl.l_whence = SEEK_SET;
-		fl.l_start = 0;
-		fl.l_len = 0;
-		if (fcntl(FD, F_GETLK,&fl) == -1)
-			return -1;
-		// no lock found
-		if (fl.l_type == F_UNLCK)
-			return 0;
-                // lock found
-		return 1;
-	}
-	int UnLock(int FD) {
-		struct flock fl;
-		fl.l_type = F_UNLCK;
-		fl.l_whence = SEEK_SET;
-		fl.l_start = 0;
-		fl.l_len = 0;
-		if (fcntl(FD, F_SETLKW,&fl) == -1)
-			return -1;
-		return 1;
-	}
-	
+int infd=-1;
+unsigned char *inposition;
+unsigned char *indata;
 
-	void setupBuffer() {
-		if(fd>0) {
-			ALOGW("Tried to open buffer twice!");
-			return; // already made
-		}
-
-		fd = open("/dev/audio/audio_loop", O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
-		if(fd<0) {
-			ALOGE("Could not open audio loop buffer!");
-			return;
-		}
-			
-		ALOGE("successfully opened audio loop buffer in /dev/audio/audio_loop");
-	
-
-		// expand file to correct size
-		lseek(fd, sizeof(unsigned short)*(BUFFER_SIZE+1)-1, SEEK_SET);
-		write(fd, " ", 1);
-
-		// mmap
-		position = (unsigned short*) mmap(NULL, sizeof(unsigned short)*(BUFFER_SIZE+1), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-		if(!position)
-			ALOGE("Could not MMAP audio loop buffer!");
-
-		ALOGI("Opened audio loop successfully.");
-
-		data = position+sizeof(unsigned short);
+void setupBuffer() {
+	if (fd > 0) {
+		ALOGW("Tried to open buffer twice!");
+		return; // already made
 	}
 
-	void setupInBuffer() {
-			if(infd>0) {
-				ALOGW("Tried to open buffer twice!");
-				return; // already made
-			}
-
-			infd = open("/dev/audio/audio_loop", O_RDWR, S_IRUSR|S_IWUSR);
-			if(infd<0) {
-				ALOGE("Could not open microphone audio loop buffer!");
-				return;
-			}
-
-			ALOGE("successfully opened microphone audio loop buffer in /dev/audio/audio_loop");
-
-
-			// expand file to correct size
-			//lseek(infd, sizeof(unsigned short)*(BUFFER_SIZE+1)-1, SEEK_SET);
-			//write(infd, " ", 1);
-
-			// mmap
-			inposition = (unsigned short*) mmap(NULL, sizeof(unsigned short)*(BUFFER_SIZE+1), PROT_READ|PROT_WRITE, MAP_SHARED, infd, 0);
-			if(!inposition)
-				ALOGE("Could not MMAP audio loop microphone buffer!");
-
-			ALOGI("Opened audio loop microphone successfully.");
-
-			indata = inposition+sizeof(unsigned short);
-			// set initial read lock on buffer
-			if (SetLock(infd) == -1) 
-                            ALOGI("Error setting fnctl lock for input buffer!\n");
-		}
-
-
-	void readFromBuffer(int length, unsigned short *out) {
-
-		int pos = *inposition, i;
-		for (i=0; i< length; i++, pos = (pos+1)%BUFFER_SIZE){
-			out[i]=indata[pos];
-		}
-		*inposition = pos;
+	fd = open("/dev/audio/audio_loop", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	if (fd < 0) {
+		ALOGE("Could not open audio loop buffer!");
+		return;
 	}
 
-	void writeToBuffer(int length, unsigned short *in) {
-		if(fd<0||!position)
-			return;
+	ALOGI("successfully opened audio loop buffer in /dev/audio/audio_loop");
 
-		int pos = *position, i;
 
-		for(i=0;i<length;i++,pos=(pos+1)%BUFFER_SIZE) {
-			data[pos]=in[i];
-		}
-		*position=pos;
+	// expand file to correct size
+	lseek(fd, sizeof (unsigned char)*(BUFFER_SIZE + 1) - 1, SEEK_SET);
+	write(fd, " ", 1);
+
+	// mmap
+	position = (unsigned char*) mmap(NULL, sizeof (unsigned short)*(BUFFER_SIZE + 1), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (!position)
+		ALOGE("Could not MMAP audio loop buffer!");
+
+	ALOGI("Opened audio loop successfully.");
+
+	data = position + sizeof (unsigned char);
+}
+
+
+
+void setupInBuffer() {
+	if (infd > 0) {
+		ALOGW("Tried to open buffer twice!");
+		return; // already made
 	}
+
+	infd = open("/dev/audio/audio_loop", O_RDWR, S_IRUSR | S_IWUSR);
+	if (infd < 0) {
+		ALOGE("Could not open microphone audio loop buffer!");
+		return;
+	}
+
+	ALOGI("successfully opened microphone audio loop buffer in /dev/audio/audio_loop");
+
+	// mmap
+	inposition = (unsigned char*) mmap(NULL, sizeof (unsigned char)*(BUFFER_SIZE + 1), PROT_READ | PROT_WRITE, MAP_SHARED, infd, 0);
+	if (!inposition)
+		ALOGE("Could not MMAP audio loop microphone buffer!");
+
+	ALOGI("Opened audio loop microphone successfully.");
+
+	indata = inposition + sizeof (unsigned char);
+
+}
+
+void readFromBuffer(int length, unsigned char *out) {
+
+	int pos = *inposition, i;
+	for (i = 0; i < length; i++, pos = (pos + 1) % BUFFER_SIZE) {
+		out[i] = indata[pos];
+	}
+	*inposition = pos;
+}
+
+void writeToBuffer(int length, unsigned char *in) {
+	if(fd<0||!position)
+		return;
+
+	int pos = *position, i;
+
+	for(i=0;i<length;i++,pos=(pos+1)%BUFFER_SIZE) {
+		data[pos]=in[i];
+	}
+	*position=pos;
+}
 
 }
 
@@ -225,7 +182,6 @@ AudioFakeHardware::~AudioFakeHardware()
 
 status_t AudioFakeHardware::initCheck()
 {
-    //return NO_ERROR;
      if (mFd >= 0) {
         if (::access(kAudioDeviceName, O_RDWR) == NO_ERROR)
             return NO_ERROR;
@@ -253,8 +209,8 @@ AudioStreamOut* AudioFakeHardware::openOutputStream(
         *status = lStatus;
     }
     if (lStatus == NO_ERROR) {
-		ALOGI("Makin' an output...");
-                mOutput = out;                
+        ALOGI("Output Stream opened successfully");
+        mOutput = out;
     }else { 
             delete out;
     }
@@ -264,9 +220,9 @@ AudioStreamOut* AudioFakeHardware::openOutputStream(
 
 void AudioFakeHardware::closeOutputStream(AudioStreamOut* out)
 {
-    ALOGI("Gettin' rid of an output...");
+    ALOGI("Closing Output Stream.");
     if (mOutput && out == mOutput) {
-        delete mOutput;
+       delete mOutput;
        mOutput = 0;
     }
     //delete out;
@@ -292,14 +248,13 @@ AudioStreamIn* AudioFakeHardware::openInputStream(
     }
     
     AudioAACStreamIn* in = new AudioAACStreamIn();
-    //status_t lStatus = in->set(format, channels, sampleRate);
     status_t lStatus = in->set(this, mFd, devices, format, channels, sampleRate, acoustics);
 
     if (status) {
         *status = lStatus;
     }
     if (lStatus == NO_ERROR) {
-        ALOGI("Makin' an input...");
+        ALOGI("Input Stream opened successfully");
         mInput = in;
     }else{
         ALOGI("openInputStream() failure...\n");
@@ -354,8 +309,6 @@ status_t AudioFakeHardware::dump(int fd, const Vector<String16>& args)
     }
     return NO_ERROR;
 }
-//android::Mutex AudioFakeHardware::Writelock;
-//android::Condition AudioFakeHardware::shouldReadCondition;
 
 // ----------------------------------------------------------------------------
 
@@ -367,13 +320,11 @@ status_t AudioAACStreamOut::set(
         uint32_t *pChannels, 
         uint32_t *pRate)
 {
-//    if (pFormat) *pFormat = format();
-//    if (pChannels) *pChannels = channels();
-//    if (pRate) *pRate = sampleRate();
     int lFormat = pFormat ? *pFormat : 0;
     uint32_t lChannels = pChannels ? *pChannels : 0;
     uint32_t lRate = pRate ? *pRate : 0;
-
+    //ALOGI("###AudioAACStreamOut::set(%p, %d, %d, %d, %u)", hw, fd, lFormat, lChannels, lRate);
+    //ALOGI("###AudioAACStreamOut::set default values are(%p, %d, %d, %d, %u)", hw, fd, format(), channels(), sampleRate());
     // fix up defaults
     if (lFormat == 0) lFormat = format();
     if (lChannels == 0) lChannels = channels();
@@ -386,6 +337,7 @@ status_t AudioAACStreamOut::set(
         if (pFormat) *pFormat = format();
         if (pChannels) *pChannels = channels();
         if (pRate) *pRate = sampleRate();
+        //ALOGI("###AudioAACStreamOut::set not a valid configuration: returning BAD_VALUE\n");
         return BAD_VALUE;
     }
 
@@ -400,7 +352,9 @@ status_t AudioAACStreamOut::set(
 
 }
 
-AudioAACStreamOut::~AudioAACStreamOut(){}
+AudioAACStreamOut::~AudioAACStreamOut(){
+
+}
 
 ssize_t AudioAACStreamOut::write(const void* buffer, size_t bytes)
 {
@@ -415,9 +369,8 @@ ssize_t AudioAACStreamOut::write(const void* buffer, size_t bytes)
 		gettimeofday(&time, NULL);
 	}
 
-	//writeToBuffer(bytes/sizeof(unsigned short),(unsigned short*)buffer);	// bytes/2 is because I care about shorts, not bytes
-	writeToBuffer(bytes,(unsigned short*)buffer);
-        gettimeofday(&end, NULL);    
+	writeToBuffer(bytes,(unsigned char*)buffer);
+	gettimeofday(&end, NULL);
 
 	// advance the time time by a frame
 	time.tv_usec += (bytes * 1000000ll) / sizeof(int16_t) / AudioSystem::popCount(channels()) / sampleRate();
@@ -493,16 +446,6 @@ status_t AudioAACStreamOut::getRenderPosition(uint32_t *dspFrames)
 }
 
 
-// AudioAACStreamIn operations
-//
-//status_t AudioAACStreamIn::set(int *pFormat, uint32_t *pChannels, uint32_t *pRate)
-//{
-//    if (pFormat) *pFormat = format();
-//    if (pChannels) *pChannels = channels();
-//    if (pRate) *pRate = sampleRate();
-//
-//    return NO_ERROR;
-//}
 status_t AudioAACStreamIn::set(        
         AudioFakeHardware *hw,
         int fd,
@@ -513,15 +456,18 @@ status_t AudioAACStreamIn::set(
         AudioSystem::audio_in_acoustics acoustics)
 {
     if (pFormat == 0 || pChannels == 0 || pRate == 0) return BAD_VALUE;
-    ALOGV("AudioAACStreamIn::set(%p, %d, %d, %d, %u)", hw, fd, *pFormat, *pChannels, *pRate);
+
+    
+    //ALOGW("###AudioAACStreamIn::set(%p, %d, %d, %d, %u)", hw, fd, *pFormat, *pChannels, *pRate);
     // check values
     if ((*pFormat != format()) ||
         (*pChannels != channels()) ||
         (*pRate != sampleRate())) {
-        ALOGE("Error opening input channel");
+        //ALOGE("Error opening input channel");
         *pFormat = format();
         *pChannels = channels();
         *pRate = sampleRate();
+        //ALOGI("###AudioAACStreamIn::set not a valid configuration: returning BAD_VALUE\n");
         return BAD_VALUE;
     }
 
@@ -534,31 +480,20 @@ status_t AudioAACStreamIn::set(
 AudioAACStreamIn::~AudioAACStreamIn()
 {
 }
-//
-//unsigned int  AudioAACStreamIn::getInputFramesLost() const
-//{
-//	return 0;
-//}
+
 
 ssize_t AudioAACStreamIn::read(void* buffer, ssize_t bytes)
 {
     
-//	while ( GetLock(infd) == 1){ // lock is found
-//                ALOGI("lock found sleeping...\n");
-//		usleep(500000); // half a second for now
-//	}
-	
-	//ALOGI("No lock found reading...\n");
-        AutoMutex lock(mLock);
 	struct timeval end;
 	gettimeofday(&end, NULL);
 	int diff = end.tv_usec-last.tv_usec+1000000ll*(end.tv_sec-last.tv_sec);
 	if(diff>250000||diff<0)	{ // 1/4sec
-		ALOGI("read:: Resetting time; had %d diff\n", diff);
+		ALOGV("read:: Resetting time; had %d diff\n", diff);
 		gettimeofday(&last, NULL);
 	}
-	//readFromBuffer(bytes/sizeof(unsigned short),(unsigned short*)buffer);	// bytes/2 is because I care about shorts, not bytes
-        readFromBuffer(bytes,(unsigned short*)buffer);
+	readFromBuffer(bytes,(unsigned char*)buffer);
+
 
 	// advance the time time by a frame
 	last.tv_usec += (bytes * 1000000ll) / sizeof(int16_t) / AudioSystem::popCount(channels()) / sampleRate();
@@ -572,9 +507,7 @@ ssize_t AudioAACStreamIn::read(void* buffer, ssize_t bytes)
 	if(diff>0)	// If it's positive, sleep the difference between the expected end time and the actual end time
 		usleep(diff);
 
-	// set read lock. Must be unlocked by next write.
-	//SetLock(infd);
-	return bytes/sizeof(unsigned short);
+	return bytes;
 }
 
 status_t AudioAACStreamIn::dump(int fd, const Vector<String16>& args)

@@ -50,6 +50,7 @@ PRODUCT_COPY_FILES += \
     device/mitre/svmp/sshd_config.android:system/etc/ssh/sshd_config \
     device/mitre/svmp/print-netcfg:system/bin/print-netcfg \
     device/mitre/svmp/remount/remount.sh:system/bin/remount.sh \
+    device/mitre/svmp/audio_policy.conf:system/etc/audio_policy.conf \
     $(KERNEL_BIN):kernel
 
 ########################################################################
