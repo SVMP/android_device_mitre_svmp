@@ -102,8 +102,6 @@ endif
 
 PRODUCT_POLICY := android.policy_phone
 
-MESA_GPU_DRIVERS := swrast llvmpipe
-
 PRODUCT_VERSION := 2.0.0-pre
 
 PRODUCT_NAME := svmp
