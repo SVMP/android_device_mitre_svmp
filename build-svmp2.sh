@@ -40,6 +40,19 @@ if [ ! -r $CONFIG_FILE ] ; then
 fi
 
 ########################################################################
+# What build variant should we use?
+########################################################################
+
+if [ -z $SVMP_BUILD_VARIANT ] ; then
+    SVMP_BUILD_VARIANT=$(whiptail --menu --title "Build Variant" \
+        "Choose the build variant to use to configure lunch:" $WT_HEIGHT $WT_WIDTH 4 \
+        eng "   Debug, has development tools such as root-level ADB." \
+        user "   Production, uses restricted settings." \
+        userdebug "   Hybrid, intended for user testing but not development."  3>&1 1>&2 2>&3 ) || exit
+    SHOW_SAVE_DIALOG=yes
+fi
+
+########################################################################
 # What type of disk image, container, or VM appliance to build?
 ########################################################################
 
@@ -200,6 +213,7 @@ fi
 _MESSAGE="Would you like to save these settings for later?
 
 The following settings will be saved to $CONFIG_FILE:
+    SVMP_BUILD_VARIANT = \"$SVMP_BUILD_VARIANT\"
     SVMP_BUILD_TYPE = \"$SVMP_BUILD_TYPE\"
     SVMP_DISK_TYPE = \"$SVMP_DISK_TYPE\"
     SVMP_AIO_BUILD = \"$SVMP_AIO_BUILD\"
@@ -214,7 +228,8 @@ if [ $SHOW_SAVE_DIALOG == "yes" ] ; then
     if whiptail --yesno --title "Save Settings" --defaultno \
              "$_MESSAGE" 20 $WT_WIDTH
     then
-        echo "SVMP_BUILD_TYPE=\"$SVMP_BUILD_TYPE\"" > $CONFIG_FILE
+        echo "SVMP_BUILD_VARIANT=\"$SVMP_BUILD_VARIANT\"" > $CONFIG_FILE
+        echo "SVMP_BUILD_TYPE=\"$SVMP_BUILD_TYPE\"" >> $CONFIG_FILE
         echo "SVMP_DISK_TYPE=\"$SVMP_DISK_TYPE\"" >> $CONFIG_FILE
         echo "SVMP_AIO_BUILD=\"$SVMP_AIO_BUILD\"" >> $CONFIG_FILE
         echo "SVMP_ENABLE_SSH=\"$SVMP_ENABLE_SSH\"" >> $CONFIG_FILE
@@ -305,7 +320,7 @@ function do_build () {
   fi
 
   . build/envsetup.sh
-  lunch svmp-eng
+  lunch svmp-$SVMP_BUILD_VARIANT
   rm -f $OUT/root/fstab.svmp
   export INIT_BOOTCHART=true
   echo make $MAKE_SYSTEM_TARGET $MAKE_DATA_TARGET $MAKE_OPTS -j$NUM_PROCS
