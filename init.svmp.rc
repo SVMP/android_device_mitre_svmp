@@ -44,20 +44,11 @@ on fs
 ###
 
 on post-fs-data
-	mkdir /data/misc/dhcp 0770 dhcp dhcp
-	chown dhcp dhcp /data/misc/dhcp
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    chown dhcp dhcp /data/misc/dhcp
     mkdir /data/media 0770 media_rw media_rw
 
     setprop vold.post_fs_data_done 1
-
-# -Q is a special logcat option that forces the
-# program to check wether it runs on the emulator
-# if it does, it redirects its output to the device
-# named by the androidboot.console kernel option
-# if not, it simply exits immediately
-
-service svmp-logcat /system/bin/logcat -Q
-    oneshot
 
 service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
