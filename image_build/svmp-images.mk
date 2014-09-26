@@ -205,7 +205,7 @@ $(SVMP_OVA_VIRTUALBOX_TARGET): \
 		--rtcuseutc on
 	$(hide) $(virtual_box_manager) modifyvm \
 		"$(VBOX_OVA_TMP_VMNAME)" \
-		--nic1 bridged
+		--nic1 nat
 	$(hide) $(virtual_box_manager) modifyvm \
 		"$(VBOX_OVA_TMP_VMNAME)" \
 		--nictype1 82540EM
